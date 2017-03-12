@@ -17,6 +17,7 @@ import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class OcrDetailActivity extends AppCompatActivity {
 
@@ -35,6 +36,11 @@ public class OcrDetailActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 pb.setVisibility(View.VISIBLE);
+                active = true;
+                Context context = OcrDetailActivity.this;
+                int duration = Toast.LENGTH_SHORT;
+                Toast toast = Toast.makeText(context, "Upload Image and process OCR", duration);
+                toast.show();
                 new ProcessOnlineOCR().execute();
             }
         });
@@ -43,13 +49,7 @@ public class OcrDetailActivity extends AppCompatActivity {
 
     }
 
-    static boolean active;
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        active = true;
-    }
+    private boolean active=false;
 
     @Override
     public void onStop() {
@@ -84,7 +84,7 @@ public class OcrDetailActivity extends AppCompatActivity {
             final Dialog dialog = new Dialog(OcrDetailActivity.this);
             dialog.setContentView(R.layout.ocr_popup);
             dialog.setTitle("OCR Result");
-            ((TextView)dialog.findViewById(R.id.ocrTextView)).setText("djfdjfk, fjdlfjldf, jdlfjldjfld, fjdlfjldfjldjf, fjdlfjldfjkdjfdf,j lfdjlfkdfdklfjklfdjkfjdf.jfldjfldlfdf");
+            ((TextView)dialog.findViewById(R.id.ocrTextView)).setText("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum");
             dialog.show();
         }
     }

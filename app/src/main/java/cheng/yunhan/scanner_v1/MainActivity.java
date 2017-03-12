@@ -11,6 +11,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -35,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
     private CustomAdapter viewAdapter;
     private File imageFile;
+    private TextView noFileTv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
         viewAdapter = new CustomAdapter(this,new ArrayList<ImageDocument>());
         GridView gridView = (GridView) findViewById(R.id.gridView);
         gridView.setAdapter(viewAdapter);
+        noFileTv = (TextView)findViewById(R.id.noFileTV);
 
         FloatingActionButton scanBtn = (FloatingActionButton) findViewById(R.id.scan);
         scanBtn.setOnClickListener(new OnClickListener() {
@@ -110,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
     public class ImageDocument {
         String timeStamp;
         Bitmap image;
+        String imagePath;
     }
 
     @Override
@@ -131,7 +135,9 @@ public class MainActivity extends AppCompatActivity {
                 ImageDocument imageDocument = new ImageDocument();
                 imageDocument.timeStamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
                 imageDocument.image =decodeSampledBitmapFromFile(result.getUri().getPath(),1000, 700);
+                imageDocument.imagePath = result.getUri().getPath();
                 viewAdapter.add(imageDocument);
+                noFileTv.setVisibility(View.INVISIBLE);
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                 Exception error = result.getError();
             }
@@ -164,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
             super(context, 0, objects);
         }
 
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public View getView(final int position, View convertView, ViewGroup parent) {
             ImageDocument doc = getItem(position);
             ViewHolder viewHolder;
             if (convertView == null) {
@@ -179,6 +185,16 @@ public class MainActivity extends AppCompatActivity {
 
             viewHolder.im.setImageBitmap(doc.image);
             viewHolder.tv.setText(doc.timeStamp);
+
+            convertView.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent toDetailIntent = new Intent(MainActivity.this, OcrDetailActivity.class);
+                    toDetailIntent.putExtra("imagePath", getItem(position).imagePath);
+                    startActivity(toDetailIntent);
+                }
+            });
+
             return convertView;
         }
     }
