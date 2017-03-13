@@ -10,6 +10,7 @@ import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.OrientationHelper;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Gravity;
@@ -34,7 +35,7 @@ import java.io.OutputStreamWriter;
 import java.util.Date;
 
 public class OcrDetailActivity extends AppCompatActivity {
-
+    final Context context = this;
     private ProgressBar pb;
     private String imagePath;
     @Override
@@ -64,7 +65,7 @@ public class OcrDetailActivity extends AppCompatActivity {
 
     }
 
-    private void writeOcrTextToFile(String imagePath, String txt) throws FileNotFoundException {
+    private String processOCR(String imagePath, String txt) throws FileNotFoundException {
         File storageDir = OcrDetailActivity.this.getExternalFilesDir("OCRText");
 
         String[] paths = imagePath.split("/");
@@ -97,6 +98,7 @@ public class OcrDetailActivity extends AppCompatActivity {
                     outputStream.close();
                     fOut.flush();
                     fOut.close();
+                    return txt;
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
@@ -123,9 +125,19 @@ public class OcrDetailActivity extends AppCompatActivity {
             }
 
             String textStr = text.toString();
-            Log.e("",text.toString());
+            return textStr;
 
         }
+
+        return "";
+    }
+
+    private void showOCRResult(String text) {
+        final Dialog dialog = new Dialog(context);
+        dialog.setContentView(R.layout.ocr_popup);
+        dialog.setTitle("OCR Result");
+        ((TextView)dialog.findViewById(R.id.ocrTextView)).setText(text);
+        dialog.show();
     }
 
     private boolean active=false;
@@ -136,38 +148,32 @@ public class OcrDetailActivity extends AppCompatActivity {
         active = false;
     }
 
-    private class ProcessOnlineOCR extends AsyncTask<Void, Void, Void>{
+    private class ProcessOnlineOCR extends AsyncTask<Void, Void, String>{
 
         @Override
-        protected Void doInBackground(Void... params) {
+        protected String doInBackground(Void... params) {
 
             Thread thread = new Thread();
             try {
-                writeOcrTextToFile(imagePath, (new Date()).getTime() + "Some random words");
-                thread.sleep(3000);
-                thread.start();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                return processOCR(imagePath, (new Date()).getTime() + "Some random words");
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
-            return null;
+
+            return "";
         }
 
         @Override
-        protected void onPostExecute(Void aVoid) {
+        protected void onPostExecute(String result ) {
             //super.onPostExecute(aVoid);
 
             if (!active) {
                 return;
             }
 
+            showOCRResult(result);
+
             pb.setVisibility(View.INVISIBLE);
-            final Dialog dialog = new Dialog(OcrDetailActivity.this);
-            dialog.setContentView(R.layout.ocr_popup);
-            dialog.setTitle("OCR Result");
-            ((TextView)dialog.findViewById(R.id.ocrTextView)).setText("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum");
-            dialog.show();
         }
     }
 

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -101,10 +102,14 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if (file != null) {
-                Uri photoURI = FileProvider.getUriForFile(this,
-                        "cheng.yunhan.scanner_v1.provider",
-                        file);
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                if (Build.VERSION.SDK_INT >= 24) {
+                    Uri photoURI = FileProvider.getUriForFile(this,
+                            "cheng.yunhan.scanner_v1.provider",
+                            file);
+                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                } else {
+                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file));
+                }
                 imageFile = file;
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
             }
