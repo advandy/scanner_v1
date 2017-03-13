@@ -6,10 +6,12 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -19,15 +21,28 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.util.Date;
+
 public class OcrDetailActivity extends AppCompatActivity {
 
     private ProgressBar pb;
+    private String imagePath;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ocr_detail);
         Intent intent = getIntent();
-        String imagePath = intent.getStringExtra("imagePath");
+        imagePath = intent.getStringExtra("imagePath");
         ImageView im = (ImageView)findViewById(R.id.imageView2);
         im.setImageBitmap(decodeSampledBitmapFromFile(imagePath, 1000, 1000));
 
@@ -49,6 +64,70 @@ public class OcrDetailActivity extends AppCompatActivity {
 
     }
 
+    private void writeOcrTextToFile(String imagePath, String txt) throws FileNotFoundException {
+        File storageDir = OcrDetailActivity.this.getExternalFilesDir("OCRText");
+
+        String[] paths = imagePath.split("/");
+        final String fileName = paths[paths.length-1];
+
+        File[] files = storageDir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.contains(fileName);
+            }
+        });
+
+        File ocrTextFile = null;
+        if (files.length == 0) {
+            try {
+                ocrTextFile = File.createTempFile(
+                        fileName,  /* prefix */
+                        ".txt",         /* suffix */
+                        storageDir      /* directory */
+                );
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            if (ocrTextFile != null) {
+                try {
+                    FileOutputStream fOut = new FileOutputStream(ocrTextFile);
+                    OutputStreamWriter outputStream = new OutputStreamWriter(fOut);
+                    outputStream.append(txt);
+                    outputStream.close();
+                    fOut.flush();
+                    fOut.close();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        } else {
+            ocrTextFile = files[0];
+            BufferedReader br = new BufferedReader(new FileReader(ocrTextFile));
+
+            StringBuilder text = new StringBuilder();
+
+            try {
+                String line;
+
+                while ((line = br.readLine()) != null) {
+                    text.append(line);
+                    text.append('\n');
+                }
+                br.close();
+            }
+            catch (IOException e) {
+                //You'll need to add proper error handling here
+            }
+
+            String textStr = text.toString();
+            Log.e("",text.toString());
+
+        }
+    }
+
     private boolean active=false;
 
     @Override
@@ -64,9 +143,12 @@ public class OcrDetailActivity extends AppCompatActivity {
 
             Thread thread = new Thread();
             try {
+                writeOcrTextToFile(imagePath, (new Date()).getTime() + "Some random words");
                 thread.sleep(3000);
                 thread.start();
             } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
             return null;

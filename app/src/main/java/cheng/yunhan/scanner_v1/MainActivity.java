@@ -9,6 +9,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -26,10 +27,15 @@ import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+
+import static android.R.attr.bitmap;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -55,6 +61,32 @@ public class MainActivity extends AppCompatActivity {
                 takePhoto();
             }
         });
+
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File[] imageFiles = storageDir.listFiles();
+        Log.e("files", String.valueOf(imageFiles));
+        if (imageFiles.length > 0) {
+            noFileTv.setVisibility(View.INVISIBLE);
+        }
+        for (File imageFile: imageFiles) {
+            String name = imageFile.getName();
+            String imagePath = imageFile.getAbsolutePath();
+            Bitmap image = decodeSampledBitmapFromFile(imagePath, 1000, 1000);
+            viewAdapter.add(new ImageDocument(name, image, imagePath));
+        }
+    }
+
+    public class ImageDocument {
+        public String timeStamp;
+        public Bitmap image;
+        public String imagePath;
+        public CharSequence ocrText;
+
+        public ImageDocument(String name, Bitmap image, String imagePath) {
+            this.timeStamp = name;
+            this.image = image;
+            this.imagePath = imagePath;
+        }
     }
 
     private void takePhoto() {
@@ -63,13 +95,16 @@ public class MainActivity extends AppCompatActivity {
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             //file = new File(Environment.getExternalStorageDirectory()+File.separator + "temp_image_scanner.jpg");
             try {
-                file =createImageFile();
+                file = createImageFile();
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
             if (file != null) {
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file));
+                Uri photoURI = FileProvider.getUriForFile(this,
+                        "cheng.yunhan.scanner_v1.provider",
+                        file);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 imageFile = file;
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
             }
@@ -110,12 +145,6 @@ public class MainActivity extends AppCompatActivity {
         return BitmapFactory.decodeFile(path, options);
     }
 
-    public class ImageDocument {
-        String timeStamp;
-        Bitmap image;
-        String imagePath;
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
@@ -123,6 +152,8 @@ public class MainActivity extends AppCompatActivity {
             CropImage.activity(Uri.fromFile(imageFile))
                     .setGuidelines(CropImageView.Guidelines.ON)
                     .start(this);
+        } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_CANCELED) {
+            imageFile.delete();
         }
 
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
@@ -132,14 +163,28 @@ public class MainActivity extends AppCompatActivity {
                 toDetailIntent.putExtra("imagePath", result.getUri().getPath());
                 startActivity(toDetailIntent);
 
-                ImageDocument imageDocument = new ImageDocument();
-                imageDocument.timeStamp =  new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-                imageDocument.image =decodeSampledBitmapFromFile(result.getUri().getPath(),1000, 700);
+                ImageDocument imageDocument = new ImageDocument(null, null, null);
+                imageDocument.timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                imageDocument.image = decodeSampledBitmapFromFile(result.getUri().getPath(),1000, 1000);
                 imageDocument.imagePath = result.getUri().getPath();
+                OutputStream outStream = null;
+                try {
+                    outStream = new FileOutputStream(imageFile);
+                    imageDocument.image.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+                    outStream.flush();
+                    outStream.close();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
                 viewAdapter.add(imageDocument);
                 noFileTv.setVisibility(View.INVISIBLE);
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                 Exception error = result.getError();
+            } else if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE && resultCode == RESULT_CANCELED) {
+                imageFile.delete();
             }
         }
     }
@@ -149,6 +194,7 @@ public class MainActivity extends AppCompatActivity {
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+
         File image = File.createTempFile(
                 imageFileName,  /* prefix */
                 ".jpg",         /* suffix */
