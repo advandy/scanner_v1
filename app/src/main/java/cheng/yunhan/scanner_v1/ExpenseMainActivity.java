@@ -120,8 +120,8 @@ public class ExpenseMainActivity extends AppCompatActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_expense_main, container, false);
-            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-            textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
+            //TextView textView = (TextView) rootView.findViewById(R.id.section_label);
+            //textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
 
             final GridView timelineGrid = (GridView) rootView.findViewById(R.id.timelineGrid);
             dailyRecordAdapter = new DailyRecordAdapter(getContext(), new ArrayList<DailyRecord>());
@@ -137,7 +137,7 @@ public class ExpenseMainActivity extends AppCompatActivity {
                     expenseItem2.isIncome = true;
                     ExpenseItem expenseItem3 = new ExpenseItem("df", 12, "");
 
-                    ArrayList<ExpenseItem> lists = new ArrayList<ExpenseItem>(Arrays.asList(expenseItem1, expenseItem2, expenseItem3));
+                    ArrayList<ExpenseItem> lists = new ArrayList<ExpenseItem>(Arrays.asList(expenseItem1, expenseItem2, expenseItem3, expenseItem2, expenseItem2, expenseItem2, expenseItem2, expenseItem2, expenseItem2, expenseItem2, expenseItem2, expenseItem2, expenseItem2, expenseItem2, expenseItem2, expenseItem2, expenseItem2));
 
                     DailyRecord dailyRecord = new DailyRecord("15.03", 62, lists);
                     dailyRecordAdapter.add(dailyRecord);
@@ -199,29 +199,42 @@ public class ExpenseMainActivity extends AppCompatActivity {
             return records.get(position);
         }
 
-
+        static class ViewHolder {
+            TextView dateTV;
+            TextView dailySumTv;
+            GridView dailyItemsGV;
+        }
         // create a new ImageView for each item referenced by the Adapter
         public View getView(int position, View convertView, ViewGroup parent) {
             TextView tv;
+            ViewHolder viewHolder;
 
-            View dailyRecordView = LayoutInflater.from(mContext).inflate(R.layout.daily_record, parent, false);
-            tv = (TextView) dailyRecordView.findViewById(R.id.date);
-            tv.setText(getItem(position).date);
+            DailyRecord item = getItem(position);
 
-            tv = (TextView) dailyRecordView.findViewById(R.id.dailySum);
-            tv.setText(getItem(position).sum + "");
+            if (convertView == null) {
+                convertView = LayoutInflater.from(mContext).inflate(R.layout.daily_record, parent, false);
+                viewHolder = new ViewHolder();
+                viewHolder.dateTV = (TextView) convertView.findViewById(R.id.date);
+                viewHolder.dailySumTv = (TextView) convertView.findViewById(R.id.dailySum);
+                viewHolder.dailyItemsGV = (GridView) convertView.findViewById(R.id.dailyItems);
+                convertView.setTag(viewHolder);
+            } else {
+                viewHolder = (ViewHolder) convertView.getTag();
+            }
 
-            GridView dailyItems = (GridView) dailyRecordView.findViewById(R.id.dailyItems);
-            ViewGroup.LayoutParams params = dailyItems.getLayoutParams();
-            params.height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 94 * getItem(position).expenseItems.size(), mContext.getResources().getDisplayMetrics());
+            viewHolder.dateTV.setText(item.date);
 
-            dailyItems.setLayoutParams(params);
+            viewHolder.dailySumTv.setText(item.sum + "");
+            ViewGroup.LayoutParams params = viewHolder.dailyItemsGV.getLayoutParams();
+            params.height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 86 * item.expenseItems.size(), mContext.getResources().getDisplayMetrics());
 
-            DailyItemAdapter dailyItemAdapter = new DailyItemAdapter(mContext, getItem(position).expenseItems);
+            viewHolder.dailyItemsGV.setLayoutParams(params);
 
-            dailyItems.setAdapter(dailyItemAdapter);
+            DailyItemAdapter dailyItemAdapter = new DailyItemAdapter(mContext, item.expenseItems);
 
-            return dailyRecordView;
+            viewHolder.dailyItemsGV .setAdapter(dailyItemAdapter);
+
+            return convertView;
         }
     }
 
@@ -247,17 +260,31 @@ public class ExpenseMainActivity extends AppCompatActivity {
             return 0;
         }
 
+        static class ViewHolder {
+            TextView incomeItemTV;
+            TextView expenseItemTV;
+        }
+
         // create a new ImageView for each item referenced by the Adapter
         public View getView(int position, View convertView, ViewGroup parent) {
-            View itemView = LayoutInflater.from(mContext).inflate(R.layout.expense_item, parent, false);
-            TextView tv;
-            if (getItem(position).isIncome) {
-                tv = (TextView)itemView.findViewById(R.id.incomeItem);
+            ExpenseItem item = getItem(position);
+            ViewHolder viewHolder;
+            if (convertView == null) {
+                viewHolder = new ViewHolder();
+                convertView = LayoutInflater.from(mContext).inflate(R.layout.expense_item, parent, false);
+                viewHolder.incomeItemTV = (TextView)convertView.findViewById(R.id.incomeItem);
+                viewHolder.expenseItemTV = (TextView)convertView.findViewById(R.id.expenseItem);
+                convertView.setTag(viewHolder);
             } else {
-                tv = (TextView)itemView.findViewById(R.id.expenseItem);
+                viewHolder = (ViewHolder) convertView.getTag();
             }
-            tv.setText(getItem(position).category + ": " + getItem(position).sum);
-            return itemView;
+
+            if (item.isIncome) {
+                viewHolder.incomeItemTV.setText(item.category + ": " + item.sum);
+            } else {
+                viewHolder.expenseItemTV.setText(item.category + ": " + item.sum);
+            }
+            return convertView;
         }
 
     }
