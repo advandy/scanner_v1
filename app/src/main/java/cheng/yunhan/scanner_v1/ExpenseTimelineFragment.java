@@ -34,7 +34,8 @@ public class ExpenseTimelineFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
-    private DailyRecordAdapter dailyRecordAdapter;
+    private DailyItemAdapter dailyItemAdapter;
+    private ArrayList<DailyRecord> monthlyRecords = new ArrayList<DailyRecord>();
     public String book;
 
     private ExpenseMainActivity mainActivity;
@@ -81,7 +82,6 @@ public class ExpenseTimelineFragment extends Fragment {
         //textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
 
         final GridView timelineGrid = (GridView) rootView.findViewById(R.id.timelineGrid);
-        dailyRecordAdapter = new DailyRecordAdapter(getContext(), new ArrayList<DailyRecord>());
 
         FloatingActionButton fab = (FloatingActionButton)rootView.findViewById(R.id.addExpense);
         fab.setOnClickListener(new FloatingActionButton.OnClickListener() {
@@ -89,29 +89,48 @@ public class ExpenseTimelineFragment extends Fragment {
             public void onClick(View view) {
                 /*Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();*/
-                ExpenseItem expenseItem1 = new ExpenseItem("sd", 30, "");
-                ExpenseItem expenseItem2 = new ExpenseItem("fdf", 20, "");
-                expenseItem2.isIncome = true;
-                ExpenseItem expenseItem3 = new ExpenseItem("df", 12, "");
-
-                ArrayList<ExpenseItem> lists = new ArrayList<ExpenseItem>(Arrays.asList(expenseItem1, expenseItem2, expenseItem3, expenseItem2, expenseItem2, expenseItem2, expenseItem2, expenseItem2, expenseItem2, expenseItem2, expenseItem2, expenseItem2, expenseItem2, expenseItem2, expenseItem2, expenseItem2, expenseItem2));
-
-                DailyRecord dailyRecord = new DailyRecord("15.03", 62, lists);
-                dailyRecordAdapter.add(dailyRecord);
-
+                DateItem dateItem = new DateItem("16.03", 100);
+                ExpenseItem expenseItem1 = new ExpenseItem("16.03", 20, "shopping");
+                IncomeItem incomeItem = new IncomeItem("16.03", 2000, "bonus");
+                dailyItemAdapter.add(dateItem);
+                dailyItemAdapter.add(expenseItem1);
+                dailyItemAdapter.add(expenseItem1);
+                dailyItemAdapter.add(incomeItem);
             }
         });
 
-        ExpenseItem expenseItem1 = new ExpenseItem("Sport", 30, "");
-        ExpenseItem expenseItem2 = new ExpenseItem("Food", 20, "");
-        ExpenseItem expenseItem3 = new ExpenseItem("Traffic", 12, "");
+        dailyItemAdapter = new DailyItemAdapter(getContext(), new ArrayList<TimeLineItem>());
 
-        ArrayList<ExpenseItem> lists = new ArrayList<ExpenseItem>(Arrays.asList(expenseItem1, expenseItem2, expenseItem3));
-
-        DailyRecord dailyRecord = new DailyRecord("15.03", 62, lists);
-        dailyRecordAdapter.add(dailyRecord);
-
-        timelineGrid.setAdapter(dailyRecordAdapter);
+        DateItem dateItem = new DateItem("16.03", 100);
+        ExpenseItem expenseItem1 = new ExpenseItem("16.03", 20, "shopping");
+        ExpenseItem expenseItem2 = new ExpenseItem("16.03", 10, "sport");
+        ExpenseItem expenseItem3 = new ExpenseItem("16.03", 2, "traffic");
+        IncomeItem incomeItem = new IncomeItem("16.03", 2000, "bonus");
+        dailyItemAdapter.add(dateItem);
+        dailyItemAdapter.add(expenseItem1);
+        dailyItemAdapter.add(expenseItem1);
+        dailyItemAdapter.add(expenseItem2);
+        dailyItemAdapter.add(incomeItem);
+        dailyItemAdapter.add(expenseItem3);
+        dailyItemAdapter.add(dateItem);
+        dailyItemAdapter.add(expenseItem1);
+        dailyItemAdapter.add(expenseItem1);
+        dailyItemAdapter.add(expenseItem2);
+        dailyItemAdapter.add(incomeItem);
+        dailyItemAdapter.add(expenseItem3);
+        dailyItemAdapter.add(dateItem);
+        dailyItemAdapter.add(expenseItem1);
+        dailyItemAdapter.add(expenseItem1);
+        dailyItemAdapter.add(expenseItem2);
+        dailyItemAdapter.add(incomeItem);
+        dailyItemAdapter.add(expenseItem3);
+        dailyItemAdapter.add(dateItem);
+        dailyItemAdapter.add(expenseItem1);
+        dailyItemAdapter.add(expenseItem1);
+        dailyItemAdapter.add(expenseItem2);
+        dailyItemAdapter.add(incomeItem);
+        dailyItemAdapter.add(expenseItem3);
+        timelineGrid.setAdapter(dailyItemAdapter);
 
         return rootView;
     }
@@ -120,6 +139,41 @@ public class ExpenseTimelineFragment extends Fragment {
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
             mListener.onFragmentInteraction(uri);
+        }
+    }
+
+    public class TimeLineItem {
+        public String date;
+        public double sum;
+
+        public TimeLineItem(String date, double sum) {
+            this.date = date;
+            this.sum = sum;
+        }
+    }
+
+    public class DateItem extends  TimeLineItem {
+
+        public DateItem(String date, double sum) {
+            super(date, sum);
+        }
+    }
+
+    public class ExpenseItem extends TimeLineItem {
+        public String category;
+
+        public ExpenseItem(String date, double sum, String category) {
+            super(date, sum);
+            this.category = category;
+        }
+    }
+
+    public class IncomeItem extends TimeLineItem {
+        public String category;
+
+        public IncomeItem(String date, double sum, String category) {
+            super(date, sum);
+            this.category = category;
         }
     }
 
@@ -136,80 +190,15 @@ public class ExpenseTimelineFragment extends Fragment {
     }
 
     public void refresh(String book) {
-        dailyRecordAdapter.clear();
-    }
-
-    public class ExpenseItem {
-        public String category;
-        public double sum;
-        public String remark;
-        public boolean isIncome;
-
-        public ExpenseItem(String category, double sum, String remark) {
-            this.category = category;
-            this.sum = sum;
-            this.remark = remark;
-        }
 
     }
 
-    public class DailyRecordAdapter extends ArrayAdapter<DailyRecord> {
-        private Context mContext;
-        private ArrayList<DailyRecord> records;
 
-        public DailyRecordAdapter(Context context, ArrayList<DailyRecord> records) {
-            super(context, 0, records);
-            this.mContext = context;
-            this.records = records;
-        }
-
-        public DailyRecord getItem(int position) {
-            return records.get(position);
-        }
-
-        class ViewHolder {
-            TextView dateTV;
-            TextView dailySumTv;
-            GridView dailyItemsGV;
-        }
-        // create a new ImageView for each item referenced by the Adapter
-        public View getView(int position, View convertView, ViewGroup parent) {
-            ViewHolder viewHolder;
-
-            DailyRecord item = getItem(position);
-
-            if (convertView == null) {
-                convertView = LayoutInflater.from(mContext).inflate(R.layout.daily_record, parent, false);
-                viewHolder = new ViewHolder();
-                viewHolder.dateTV = (TextView) convertView.findViewById(R.id.date);
-                viewHolder.dailySumTv = (TextView) convertView.findViewById(R.id.dailySum);
-                viewHolder.dailyItemsGV = (GridView) convertView.findViewById(R.id.dailyItems);
-                convertView.setTag(viewHolder);
-            } else {
-                viewHolder = (ViewHolder) convertView.getTag();
-            }
-
-            viewHolder.dateTV.setText(item.date);
-
-            viewHolder.dailySumTv.setText(item.sum + "");
-            ViewGroup.LayoutParams params = viewHolder.dailyItemsGV.getLayoutParams();
-            params.height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 86 * item.expenseItems.size(), mContext.getResources().getDisplayMetrics());
-
-            viewHolder.dailyItemsGV.setLayoutParams(params);
-
-            DailyItemAdapter dailyItemAdapter = new DailyItemAdapter(mContext, item.expenseItems);
-
-            viewHolder.dailyItemsGV .setAdapter(dailyItemAdapter);
-
-            return convertView;
-        }
-    }
-
-    public class DailyItemAdapter extends ArrayAdapter<ExpenseItem> {
-        private ArrayList<ExpenseItem> items;
+    public class DailyItemAdapter extends ArrayAdapter<TimeLineItem> {
+        private ArrayList<TimeLineItem> items;
         private Context mContext;
 
-        public DailyItemAdapter(Context c, ArrayList<ExpenseItem> items) {
+        public DailyItemAdapter(Context c, ArrayList<TimeLineItem> items) {
             super(c, 0, items);
             this.mContext = c;
             this.items = items;
@@ -219,7 +208,7 @@ public class ExpenseTimelineFragment extends Fragment {
             return items.size();
         }
 
-        public ExpenseItem getItem(int position) {
+        public TimeLineItem getItem(int position) {
             return items.get(position);
         }
 
@@ -234,8 +223,8 @@ public class ExpenseTimelineFragment extends Fragment {
 
         // create a new ImageView for each item referenced by the Adapter
         public View getView(int position, View convertView, ViewGroup parent) {
-            ExpenseItem item = getItem(position);
-            ViewHolder viewHolder;
+            TimeLineItem item = getItem(position);
+/*            ViewHolder viewHolder;
             if (convertView == null) {
                 viewHolder = new ViewHolder();
                 convertView = LayoutInflater.from(mContext).inflate(R.layout.expense_item, parent, false);
@@ -250,8 +239,24 @@ public class ExpenseTimelineFragment extends Fragment {
                 viewHolder.incomeItemTV.setText(item.category + ": " + item.sum);
             } else {
                 viewHolder.expenseItemTV.setText(item.category + ": " + item.sum);
+            }*/
+            View rootView = null;
+            if (item instanceof DateItem ) {
+                rootView = LayoutInflater.from(mContext).inflate(R.layout.daily_record, parent, false);
+                TextView tv = (TextView) rootView.findViewById(R.id.date);
+                tv.setText(item.date);
+                tv = (TextView)rootView.findViewById(R.id.dailySum);
+                tv.setText(item.sum + "");
+            } else if (item instanceof  ExpenseItem) {
+                rootView = LayoutInflater.from(mContext).inflate(R.layout.expense_item, parent, false);
+                TextView tv = (TextView) rootView.findViewById(R.id.expenseItem);
+                tv.setText(((ExpenseItem) item).category + ": " + item.sum);
+            } else if (item instanceof  IncomeItem) {
+                rootView = LayoutInflater.from(mContext).inflate(R.layout.expense_item, parent, false);
+                TextView tv = (TextView) rootView.findViewById(R.id.incomeItem);
+                tv.setText(((IncomeItem) item).category + ": " + item.sum);
             }
-            return convertView;
+            return rootView;
         }
 
     }
