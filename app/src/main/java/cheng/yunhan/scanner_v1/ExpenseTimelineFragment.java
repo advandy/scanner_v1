@@ -2,7 +2,9 @@ package cheng.yunhan.scanner_v1;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -14,8 +16,19 @@ import android.widget.ArrayAdapter;
 import android.widget.GridView;
 import android.widget.TextView;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -35,7 +48,17 @@ public class ExpenseTimelineFragment extends Fragment {
     private String mParam1;
     private String mParam2;
     private DailyItemAdapter dailyItemAdapter;
-    private ArrayList<DailyRecord> monthlyRecords = new ArrayList<DailyRecord>();
+    private GridView timelineGrid;
+    private TreeMap<Date, ArrayList<TimeLineItem>> monthlyRecordsCollection = new TreeMap<>(new Comparator<Date>() {
+        @Override
+        public int compare(Date o1, Date o2) {
+            return o2.compareTo(o1);
+        }
+    });
+    private Double monthlyIncome = 0.00;
+    private TextView monthlyIncomeTv;
+    private Double monthlyExpense = 0.00;
+    private TextView monthlyExpenseTv;
     public String book;
 
     private ExpenseMainActivity mainActivity;
@@ -81,66 +104,131 @@ public class ExpenseTimelineFragment extends Fragment {
         //TextView textView = (TextView) rootView.findViewById(R.id.section_label);
         //textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
 
-        final GridView timelineGrid = (GridView) rootView.findViewById(R.id.timelineGrid);
+        timelineGrid = (GridView) rootView.findViewById(R.id.timelineGrid);
+        monthlyExpenseTv = (TextView) rootView.findViewById(R.id.expenseItem);
+        monthlyIncomeTv = (TextView) rootView.findViewById(R.id.incomeItem);
 
         FloatingActionButton fab = (FloatingActionButton)rootView.findViewById(R.id.addExpense);
         fab.setOnClickListener(new FloatingActionButton.OnClickListener() {
             @Override
             public void onClick(View view) {
-                /*Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();*/
-                DateItem dateItem = new DateItem("16.03", 100);
-                ExpenseItem expenseItem1 = new ExpenseItem("16.03", 20, "shopping");
-                IncomeItem incomeItem = new IncomeItem("16.03", 2000, "bonus");
-                dailyItemAdapter.add(dateItem);
-                dailyItemAdapter.add(expenseItem1);
-                dailyItemAdapter.add(expenseItem1);
-                dailyItemAdapter.add(incomeItem);
+                new AddRecord().execute(new ExpenseItem("09-03", 22, "Tennis"));
             }
         });
 
-        dailyItemAdapter = new DailyItemAdapter(getContext(), new ArrayList<TimeLineItem>());
+        new InitTimeLine().execute("Book");
 
-        DateItem dateItem = new DateItem("16.03", 100);
-        ExpenseItem expenseItem1 = new ExpenseItem("16.03", 20, "shopping");
-        ExpenseItem expenseItem2 = new ExpenseItem("16.03", 10, "sport");
-        ExpenseItem expenseItem3 = new ExpenseItem("16.03", 2, "traffic");
-        IncomeItem incomeItem = new IncomeItem("16.03", 2000, "bonus");
-        dailyItemAdapter.add(dateItem);
-        dailyItemAdapter.add(expenseItem1);
-        dailyItemAdapter.add(expenseItem1);
-        dailyItemAdapter.add(expenseItem2);
-        dailyItemAdapter.add(incomeItem);
-        dailyItemAdapter.add(expenseItem3);
-        dailyItemAdapter.add(dateItem);
-        dailyItemAdapter.add(expenseItem1);
-        dailyItemAdapter.add(expenseItem1);
-        dailyItemAdapter.add(expenseItem2);
-        dailyItemAdapter.add(incomeItem);
-        dailyItemAdapter.add(expenseItem3);
-        dailyItemAdapter.add(dateItem);
-        dailyItemAdapter.add(expenseItem1);
-        dailyItemAdapter.add(expenseItem1);
-        dailyItemAdapter.add(expenseItem2);
-        dailyItemAdapter.add(incomeItem);
-        dailyItemAdapter.add(expenseItem3);
-        dailyItemAdapter.add(dateItem);
-        dailyItemAdapter.add(expenseItem1);
-        dailyItemAdapter.add(expenseItem1);
-        dailyItemAdapter.add(expenseItem2);
-        dailyItemAdapter.add(incomeItem);
-        dailyItemAdapter.add(expenseItem3);
-        timelineGrid.setAdapter(dailyItemAdapter);
 
         return rootView;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
+    private class InitTimeLine extends AsyncTask<String, Void, Void> {
+
+
+        @Override
+        protected Void doInBackground(String... params) {
+            DateFormat dateFormat = new SimpleDateFormat("dd-mm");
+            String dateStr = "16-03";
+            Date date = null;
+            try {
+                date = dateFormat.parse(dateStr);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+
+            dateStr = "12-03";
+            Date date1 = new Date();
+            try {
+                date1 = dateFormat.parse(dateStr);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+
+            dateStr = "19-03";
+            Date date2 = new Date();
+            try {
+                date2 = dateFormat.parse(dateStr);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+
+            dailyItemAdapter = new DailyItemAdapter(getContext(), new ArrayList<TimeLineItem>());
+
+            DateItem dateItem = new DateItem("16.03", 100);
+            ExpenseItem expenseItem1 = new ExpenseItem("16.03", 20, "shopping");
+            ExpenseItem expenseItem2 = new ExpenseItem("16.03", 10, "sport");
+            ExpenseItem expenseItem3 = new ExpenseItem("16.03", 2, "traffic");
+            IncomeItem incomeItem = new IncomeItem("16.03", 2000, "bonus");
+
+            monthlyRecordsCollection.put(date2, new ArrayList<TimeLineItem>(Arrays.asList(expenseItem1, incomeItem, expenseItem3, expenseItem2)));
+            monthlyRecordsCollection.put(date1, new ArrayList<TimeLineItem>(Arrays.asList(expenseItem1, expenseItem1, expenseItem2)));
+            monthlyRecordsCollection.put(date, new ArrayList<TimeLineItem>(Arrays.asList(expenseItem1, expenseItem3, expenseItem2, incomeItem)));
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            updateView(monthlyRecordsCollection);
+
         }
     }
+
+
+    private class AddRecord extends AsyncTask<TimeLineItem, Void, Void> {
+
+        @Override
+        protected Void doInBackground(TimeLineItem... params) {
+            try {
+                addRecord(params[0]);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            updateView(monthlyRecordsCollection);
+        }
+    }
+
+
+
+    private void addRecord(TimeLineItem record) throws ParseException {
+        DateFormat dateFormat = new SimpleDateFormat("dd-mm");
+        Date key = dateFormat.parse(record.date);
+        ArrayList<TimeLineItem> values =  monthlyRecordsCollection.get(key);
+
+        if (values == null) {
+            monthlyRecordsCollection.put(key, new ArrayList<TimeLineItem>(Arrays.asList(record)));
+        } else {
+            values.add(record);
+        }
+    }
+
+    private void updateView(TreeMap<Date, ArrayList<TimeLineItem>> records) {
+        DateFormat dateFormat = new SimpleDateFormat("dd-mm");
+        dailyItemAdapter.clear();
+        for (Map.Entry<Date, ArrayList<TimeLineItem>> entry: records.entrySet()) {
+            Date key = entry.getKey();
+            Double sum = 0.00;
+
+            ArrayList<TimeLineItem> values = entry.getValue();
+            for (TimeLineItem value : values) {
+                sum = sum + value.sum;
+            }
+            dailyItemAdapter.add(new DateItem(dateFormat.format(key), sum));
+            dailyItemAdapter.addAll(values);
+        }
+        if (timelineGrid.getAdapter() == null) {
+            timelineGrid.setAdapter(dailyItemAdapter);
+        }
+    }
+
 
     public class TimeLineItem {
         public String date;
