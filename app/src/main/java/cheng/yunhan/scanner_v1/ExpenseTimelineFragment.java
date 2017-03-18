@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -25,6 +27,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -47,8 +50,11 @@ public class ExpenseTimelineFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
-    private DailyItemAdapter dailyItemAdapter;
-    private GridView timelineGrid;
+    private RecyclerView timelineRV;
+    private TimelineAdapter mTimelineAdapter;
+    private RecyclerView.LayoutManager mLayoutManager;
+
+
     private TreeMap<Date, ArrayList<TimeLineItem>> monthlyRecordsCollection = new TreeMap<>(new Comparator<Date>() {
         @Override
         public int compare(Date o1, Date o2) {
@@ -104,7 +110,13 @@ public class ExpenseTimelineFragment extends Fragment {
         //TextView textView = (TextView) rootView.findViewById(R.id.section_label);
         //textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
 
-        timelineGrid = (GridView) rootView.findViewById(R.id.timelineGrid);
+        timelineRV = (RecyclerView) rootView.findViewById(R.id.timelineRV);
+        timelineRV.setHasFixedSize(true);
+        mLayoutManager = new LinearLayoutManager(getContext());
+        timelineRV.setLayoutManager(mLayoutManager);
+        mTimelineAdapter = new TimelineAdapter(new ArrayList<TimeLineItem>());
+        timelineRV.setAdapter(mTimelineAdapter);
+
         monthlyExpenseTv = (TextView) rootView.findViewById(R.id.expenseItem);
         monthlyIncomeTv = (TextView) rootView.findViewById(R.id.incomeItem);
 
@@ -151,8 +163,6 @@ public class ExpenseTimelineFragment extends Fragment {
             } catch (ParseException e) {
                 e.printStackTrace();
             }
-
-            dailyItemAdapter = new DailyItemAdapter(getContext(), new ArrayList<TimeLineItem>());
 
             DateItem dateItem = new DateItem("16.03", 100);
             ExpenseItem expenseItem1 = new ExpenseItem("16.03", 20, "shopping");
@@ -212,7 +222,7 @@ public class ExpenseTimelineFragment extends Fragment {
 
     private void updateView(TreeMap<Date, ArrayList<TimeLineItem>> records) {
         DateFormat dateFormat = new SimpleDateFormat("dd-mm");
-        dailyItemAdapter.clear();
+        mTimelineAdapter.items.clear();
         for (Map.Entry<Date, ArrayList<TimeLineItem>> entry: records.entrySet()) {
             Date key = entry.getKey();
             Double sum = 0.00;
@@ -221,12 +231,10 @@ public class ExpenseTimelineFragment extends Fragment {
             for (TimeLineItem value : values) {
                 sum = sum + value.sum;
             }
-            dailyItemAdapter.add(new DateItem(dateFormat.format(key), sum));
-            dailyItemAdapter.addAll(values);
+            mTimelineAdapter.items.add(new DateItem(dateFormat.format(key), sum));
+            mTimelineAdapter.items.addAll(values);
         }
-        if (timelineGrid.getAdapter() == null) {
-            timelineGrid.setAdapter(dailyItemAdapter);
-        }
+        mTimelineAdapter.notifyDataSetChanged();
     }
 
 
@@ -265,89 +273,112 @@ public class ExpenseTimelineFragment extends Fragment {
         }
     }
 
-    public class DailyRecord {
-        public String date;
-        public double sum;
-        public ArrayList<ExpenseItem> expenseItems;
+    public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHolder> {
 
-        public DailyRecord(String date, double sum, ArrayList<ExpenseItem> expenseItems) {
-            this.date = date;
-            this.sum = sum;
-            this.expenseItems = expenseItems;
-        }
-    }
+        public ArrayList<TimeLineItem> items;
 
-    public void refresh(String book) {
+        @Override
+        public int getItemViewType(int position) {
+            TimeLineItem item = items.get(position);
 
-    }
+            if (item instanceof DateItem ) {
+                return 0;
+            } else if (item instanceof  IncomeItem) {
+                return 1;
+            } else if (item instanceof  ExpenseItem) {
+                return 2;
+            }
 
-
-    public class DailyItemAdapter extends ArrayAdapter<TimeLineItem> {
-        private ArrayList<TimeLineItem> items;
-        private Context mContext;
-
-        public DailyItemAdapter(Context c, ArrayList<TimeLineItem> items) {
-            super(c, 0, items);
-            this.mContext = c;
-            this.items = items;
-        }
-
-        public int getCount() {
-            return items.size();
-        }
-
-        public TimeLineItem getItem(int position) {
-            return items.get(position);
-        }
-
-        public long getItemId(int position) {
             return 0;
         }
 
-        class ViewHolder {
-            TextView incomeItemTV;
-            TextView expenseItemTV;
+        public TimelineAdapter(ArrayList<TimeLineItem> items) {
+            this.items = items;
         }
 
-        // create a new ImageView for each item referenced by the Adapter
-        public View getView(int position, View convertView, ViewGroup parent) {
-            TimeLineItem item = getItem(position);
-/*            ViewHolder viewHolder;
-            if (convertView == null) {
-                viewHolder = new ViewHolder();
-                convertView = LayoutInflater.from(mContext).inflate(R.layout.expense_item, parent, false);
-                viewHolder.incomeItemTV = (TextView)convertView.findViewById(R.id.incomeItem);
-                viewHolder.expenseItemTV = (TextView)convertView.findViewById(R.id.expenseItem);
-                convertView.setTag(viewHolder);
-            } else {
-                viewHolder = (ViewHolder) convertView.getTag();
+        public class ViewHolder extends RecyclerView.ViewHolder {
+            public View rootView;
+
+            public ViewHolder(View rootView) {
+                super(rootView);
+                this.rootView = rootView;
+            }
+        }
+
+        public class DateViewHolder extends TimelineAdapter.ViewHolder {
+            public TextView date;
+            public TextView dateSum;
+
+            public DateViewHolder(View rootView, TextView date, TextView dateSum) {
+                super(rootView);
+                this.date = date;
+                this.dateSum = dateSum;
+            }
+        }
+
+        public class ExpenseViewHolder extends TimelineAdapter.ViewHolder {
+            public TextView expense;
+            public ExpenseViewHolder(View rootView, TextView expense) {
+                super(rootView);
+                this.expense = expense;
+            }
+        }
+
+        public class IncomeViewHolder extends TimelineAdapter.ViewHolder {
+            public TextView income;
+            public IncomeViewHolder(View rootView, TextView income) {
+                super(rootView);
+                this.income = income;
+            }
+        }
+
+        @Override
+        public TimelineAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
+            switch (viewType) {
+                case 0:
+                    View dateRootView = layoutInflater.inflate(R.layout.daily_record, parent, false);
+                    TextView dateSumTexView = (TextView) dateRootView.findViewById(R.id.dailySum);
+                    TextView dateTextView = (TextView) dateRootView.findViewById(R.id.date);
+                    return new DateViewHolder(dateRootView, dateTextView, dateSumTexView);
+                case 1:
+                    View dailyRootView = layoutInflater.inflate(R.layout.expense_item, parent, false);
+                    TextView dailyIncomTextView = (TextView) dailyRootView.findViewById(R.id.incomeItem);
+                    return new IncomeViewHolder(dailyRootView, dailyIncomTextView);
+                case 2:
+                    View dailyExpenseRootView = layoutInflater.inflate(R.layout.expense_item, parent, false);
+                    TextView dailyExpense = (TextView) dailyExpenseRootView.findViewById(R.id.expenseItem);
+                    return new ExpenseViewHolder(dailyExpenseRootView, dailyExpense);
             }
 
-            if (item.isIncome) {
-                viewHolder.incomeItemTV.setText(item.category + ": " + item.sum);
-            } else {
-                viewHolder.expenseItemTV.setText(item.category + ": " + item.sum);
-            }*/
-            View rootView = null;
+            return null;
+        }
+
+        @Override
+        public void onBindViewHolder(ViewHolder holder, int position) {
+
+            TimeLineItem item = items.get(position);
+
             if (item instanceof DateItem ) {
-                rootView = LayoutInflater.from(mContext).inflate(R.layout.daily_record, parent, false);
-                TextView tv = (TextView) rootView.findViewById(R.id.date);
-                tv.setText(item.date);
-                tv = (TextView)rootView.findViewById(R.id.dailySum);
-                tv.setText(item.sum + "");
-            } else if (item instanceof  ExpenseItem) {
-                rootView = LayoutInflater.from(mContext).inflate(R.layout.expense_item, parent, false);
-                TextView tv = (TextView) rootView.findViewById(R.id.expenseItem);
-                tv.setText(((ExpenseItem) item).category + ": " + item.sum);
-            } else if (item instanceof  IncomeItem) {
-                rootView = LayoutInflater.from(mContext).inflate(R.layout.expense_item, parent, false);
-                TextView tv = (TextView) rootView.findViewById(R.id.incomeItem);
-                tv.setText(((IncomeItem) item).category + ": " + item.sum);
+                DateViewHolder dateViewHolder = (DateViewHolder) holder;
+                dateViewHolder.date.setText(item.date);
+                dateViewHolder.dateSum.setText(item.sum + "");
+            } else if (item instanceof ExpenseItem) {
+                ExpenseViewHolder expenseViewHolder = (ExpenseViewHolder)holder;
+                expenseViewHolder.expense.setText(((ExpenseItem) item).category + ": " + item.sum);
+            } else if (item instanceof IncomeItem) {
+                IncomeViewHolder incomeViewHolder = (IncomeViewHolder)holder;
+                incomeViewHolder.income.setText(((IncomeItem) item).category + ": " + item.sum);
             }
-            return rootView;
+
         }
 
+        @Override
+        public int getItemCount() {
+            return items.size();
+        }
     }
+
 
     @Override
     public void onAttach(Context context) {

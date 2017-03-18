@@ -85,7 +85,7 @@ public class ExpenseMainActivity extends AppCompatActivity implements ExpenseTim
     @Override
     public void onBookChosen(String book) {
         ExpenseTimelineFragment fragment = (ExpenseTimelineFragment)mSectionsPagerAdapter.getItem(1);
-        fragment.refresh(book);
+        //fragment.refresh(book);
         mViewPager.setCurrentItem(1);
     }
 
