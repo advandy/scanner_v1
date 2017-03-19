@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,45 +46,49 @@ public class DAO {
         return db.insert(ItemEntry.TABLE_NAME, null, values);
     }
 
-    public void queryItemsByDay(int day, int month, int year) {
+    public void queryItemsByMonth(int month, int year) {
         String[] projection = {
                 ItemEntry._ID,
                 ItemEntry.COLUMN_NAME_ARTICLE,
                 ItemEntry.COLUMN_NAME_CATEGORY,
-                ItemEntry.COLUMN_NAME_SUM
+                ItemEntry.COLUMN_NAME_SUM,
+                ItemEntry.COLUMN_NAME_SHOP,
+                ItemEntry.COLUMN_NAME_DAY,
+                ItemEntry.COLUMN_NAME_MONTH,
+                ItemEntry.COLUMN_NAME_YEAR,
         };
 
         // Filter results WHERE "title" = 'My Title'
-        String selection =  ItemEntry.COLUMN_NAME_DAY + " = ? AND " +
-                            ItemEntry.COLUMN_NAME_MONTH + " = ? AND " +
-                            ItemEntry.COLUMN_NAME_YEAR + " = ?";
-        String[] selectionArgs = {String.valueOf(day), String.valueOf(month), String.valueOf(year)};
+        String selection = ItemEntry.COLUMN_NAME_MONTH + " = ? AND " +
+                           ItemEntry.COLUMN_NAME_YEAR + " = ?";
+        String[] selectionArgs = {String.valueOf(month), String.valueOf(year)};
 
         // How you want the results sorted in the resulting Cursor
         String sortOrder =
-                ItemEntry.COLUMN_NAME_CATEGORY + " DESC";
+                ItemEntry.COLUMN_NAME_DAY + " DESC";
 
-        Cursor cursor = db.query(
+       /* Cursor cursor = db.query(
                 ItemEntry.TABLE_NAME,                     // The table to query
                 projection,                               // The columns to return
                 selection,                                // The columns for the WHERE clause
                 selectionArgs,                            // The values for the WHERE clause
-                null,                                     // don't group the rows
+                ItemEntry.COLUMN_NAME_DAY,                                     // don't group the rows
                 null,                                     // don't filter by row groups
                 sortOrder                                 // The sort order
-        );
+        );*/
 
-        //Cursor cursor = db.rawQuery("Select * from " + ItemEntry.TABLE_NAME, null);
+        Cursor cursor = db.rawQuery("Select day, shop,sum(sum) as sum from item where month=3 AND year=2017 group by day, shop", null);
+        //cursor = db.rawQuery("Select day from item", null);
+                //Cursor cursor = db.rawQuery("Select * from " + ItemEntry.TABLE_NAME, null);
 
         List itemIds = new ArrayList<>();
         while(cursor.moveToNext()) {
-            long itemId = cursor.getLong(
-                    cursor.getColumnIndexOrThrow(ItemEntry._ID));
-            String article = cursor.getString(cursor.getColumnIndex(ItemEntry.COLUMN_NAME_ARTICLE));
-            String category = cursor.getString(cursor.getColumnIndex(ItemEntry.COLUMN_NAME_CATEGORY));
+            //long itemId = cursor.getLong(cursor.getColumnIndexOrThrow(ItemEntry._ID));
+            //String article = cursor.getString(cursor.getColumnIndex(ItemEntry.COLUMN_NAME_ARTICLE));
+            //String category = cursor.getString(cursor.getColumnIndex(ItemEntry.COLUMN_NAME_CATEGORY));
             Double sum = cursor.getDouble(cursor.getColumnIndex(ItemEntry.COLUMN_NAME_SUM));
-
-            itemIds.add(itemId);
+            Log.e("sum", String.valueOf(sum));
+            //itemIds.add(itemId);
         }
         cursor.close();
 
@@ -95,7 +100,7 @@ public class DAO {
         public static final String COLUMN_NAME_ARTICLE = "article";
         public static final String COLUMN_NAME_CATEGORY = "category";
         public static final String COLUMN_NAME_SUM = "sum";
-        public static final String COLUMN_NAME_DAY = "date";
+        public static final String COLUMN_NAME_DAY = "day";
         public static final String COLUMN_NAME_MONTH = "month";
         public static final String COLUMN_NAME_YEAR = "year";
 
@@ -117,7 +122,7 @@ public class DAO {
 
     public class DBHelper extends SQLiteOpenHelper {
         // If you change the database schema, you must increment the database version.
-        public static final int DATABASE_VERSION = 2;
+        public static final int DATABASE_VERSION = 1;
         public static final String DATABASE_NAME = "Butler.db";
 
         public DBHelper(Context context) {
