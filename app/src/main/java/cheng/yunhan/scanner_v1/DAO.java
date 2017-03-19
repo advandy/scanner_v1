@@ -79,12 +79,14 @@ public class DAO {
         );*/
 
         Cursor cursor = db.rawQuery("Select day, month, shop,sum(sum) as sum from item where month=3 AND year=2017 group by day, shop order by day DESC", null);
+
         //cursor = db.rawQuery("Select day from item", null);
                 //Cursor cursor = db.rawQuery("Select * from " + ItemEntry.TABLE_NAME, null);
 
         ArrayList<ContentValues> retVal = new ArrayList<ContentValues>();
         ContentValues map;
         while(cursor.moveToNext()) {
+
             map = new ContentValues();
             DatabaseUtils.cursorRowToContentValues(cursor, map);
             retVal.add(map);
