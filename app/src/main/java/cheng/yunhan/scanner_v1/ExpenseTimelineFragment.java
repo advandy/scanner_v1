@@ -51,6 +51,7 @@ public class ExpenseTimelineFragment extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
+    private DAO DAOUtils;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -106,6 +107,7 @@ public class ExpenseTimelineFragment extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
         mainActivity = (ExpenseMainActivity)getActivity();
+        DAOUtils = DAO.getInstance(getContext());
     }
 
     @Override
@@ -146,7 +148,8 @@ public class ExpenseTimelineFragment extends Fragment {
 
         @Override
         protected Void doInBackground(String... params) {
-            DateFormat dateFormat = new SimpleDateFormat("dd-mm");
+            DAOUtils.queryItemsByMonth(3, 2017);
+/*            DateFormat dateFormat = new SimpleDateFormat("dd-mm");
             String dateStr = "16-03";
             Date date = null;
             try {
@@ -179,7 +182,7 @@ public class ExpenseTimelineFragment extends Fragment {
 
             monthlyRecordsCollection.put(date2, new ArrayList<TimeLineItem>(Arrays.asList(expenseItem1, incomeItem, expenseItem3, expenseItem2)));
             monthlyRecordsCollection.put(date1, new ArrayList<TimeLineItem>(Arrays.asList(expenseItem1, expenseItem1, expenseItem2)));
-            monthlyRecordsCollection.put(date, new ArrayList<TimeLineItem>(Arrays.asList(expenseItem1, expenseItem3, expenseItem2, incomeItem)));
+            monthlyRecordsCollection.put(date, new ArrayList<TimeLineItem>(Arrays.asList(expenseItem1, expenseItem3, expenseItem2, incomeItem)));*/
 
             return null;
         }

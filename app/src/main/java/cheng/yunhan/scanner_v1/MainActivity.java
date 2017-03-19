@@ -88,8 +88,18 @@ public class MainActivity extends AppCompatActivity {
         add.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                //dao.addItem("REWE", "Coca Cola", "Drink", 1.99, 19, 3, 2017);
-                dao.queryItemsByDay(19,3,2017);
+                dao.addItem("REWE", "Coca Cola", "Drink", 1.99, 19, 3, 2017);
+                dao.addItem("REWE", "Coca Cola 1", "Drink", 1.99, 19, 3, 2017);
+
+                dao.addItem("LIDL", "Coca Cola 1", "Drink", 1.99, 19, 3, 2017);
+                dao.addItem("LIDL", "Coca Cola 1", "Drink", 1.99, 19, 3, 2017);
+
+                dao.addItem("REWE", "Coca Cola 2", "Drink", 1.99, 18, 3, 2017);
+                dao.addItem("REWE", "Coca Cola 3", "Drink", 1.99, 18, 3, 2017);
+                dao.addItem("REWE", "Coca Cola 4", "Drink", 1.99, 18, 3, 2017);
+
+
+                dao.queryItemsByMonth(3,2017);
                 itemsAdapter.add(new Item("new", 0.00));
             }
         });
