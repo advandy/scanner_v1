@@ -1,6 +1,9 @@
 package cheng.yunhan.scanner_v1;
 
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.media.Image;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -16,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import java.text.DateFormat;
@@ -32,6 +36,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.UUID;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -124,7 +129,9 @@ public class ExpenseTimelineFragment extends Fragment {
         fab.setOnClickListener(new FloatingActionButton.OnClickListener() {
             @Override
             public void onClick(View view) {
-                new AddRecord().execute(new ExpenseItem("09-03", 22, "Tennis"));
+                //new AddRecord().execute(new ExpenseItem("09-03", 22, "Tennis"));
+                Intent intent = new Intent(getContext(), MainActivity.class);
+                startActivity(intent);
             }
         });
 
@@ -164,11 +171,11 @@ public class ExpenseTimelineFragment extends Fragment {
                 e.printStackTrace();
             }
 
-            DateItem dateItem = new DateItem("16.03", 100);
-            ExpenseItem expenseItem1 = new ExpenseItem("16.03", 20, "shopping");
-            ExpenseItem expenseItem2 = new ExpenseItem("16.03", 10, "sport");
-            ExpenseItem expenseItem3 = new ExpenseItem("16.03", 2, "traffic");
-            IncomeItem incomeItem = new IncomeItem("16.03", 2000, "bonus");
+            DateItem dateItem = new DateItem("16-03", 100, UUID.randomUUID());
+            ExpenseItem expenseItem1 = new ExpenseItem("16-03", 20, "shopping", UUID.randomUUID());
+            ExpenseItem expenseItem2 = new ExpenseItem("16-03", 10, "sport",UUID.randomUUID());
+            ExpenseItem expenseItem3 = new ExpenseItem("16-03", 2, "traffic",UUID.randomUUID());
+            IncomeItem incomeItem = new IncomeItem("16-03", 2000, "bonus",UUID.randomUUID());
 
             monthlyRecordsCollection.put(date2, new ArrayList<TimeLineItem>(Arrays.asList(expenseItem1, incomeItem, expenseItem3, expenseItem2)));
             monthlyRecordsCollection.put(date1, new ArrayList<TimeLineItem>(Arrays.asList(expenseItem1, expenseItem1, expenseItem2)));
@@ -231,7 +238,7 @@ public class ExpenseTimelineFragment extends Fragment {
             for (TimeLineItem value : values) {
                 sum = sum + value.sum;
             }
-            mTimelineAdapter.items.add(new DateItem(dateFormat.format(key), sum));
+            mTimelineAdapter.items.add(new DateItem(dateFormat.format(key), sum, UUID.randomUUID()));
             mTimelineAdapter.items.addAll(values);
         }
         mTimelineAdapter.notifyDataSetChanged();
@@ -239,27 +246,30 @@ public class ExpenseTimelineFragment extends Fragment {
 
 
     public class TimeLineItem {
+        public UUID id;
         public String date;
         public double sum;
 
-        public TimeLineItem(String date, double sum) {
+        public TimeLineItem(String date, double sum, UUID id) {
             this.date = date;
             this.sum = sum;
+            this.id = id;
         }
+
     }
 
     public class DateItem extends  TimeLineItem {
 
-        public DateItem(String date, double sum) {
-            super(date, sum);
+        public DateItem(String date, double sum, UUID id) {
+            super(date, sum, id);
         }
     }
 
     public class ExpenseItem extends TimeLineItem {
         public String category;
 
-        public ExpenseItem(String date, double sum, String category) {
-            super(date, sum);
+        public ExpenseItem(String date, double sum, String category, UUID id) {
+            super(date, sum, id);
             this.category = category;
         }
     }
@@ -267,12 +277,18 @@ public class ExpenseTimelineFragment extends Fragment {
     public class IncomeItem extends TimeLineItem {
         public String category;
 
-        public IncomeItem(String date, double sum, String category) {
-            super(date, sum);
+        public IncomeItem(String date, double sum, String category, UUID id) {
+            super(date, sum, id);
             this.category = category;
         }
     }
+    public interface onIconClicked {
+        public void enableEdit();
+    }
 
+    public void deleteItem(TimeLineItem item) {
+
+    }
     public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHolder> {
 
         public ArrayList<TimeLineItem> items;
@@ -298,7 +314,7 @@ public class ExpenseTimelineFragment extends Fragment {
 
         public class ViewHolder extends RecyclerView.ViewHolder {
             public View rootView;
-
+            public boolean isEditMode = false;
             public ViewHolder(View rootView) {
                 super(rootView);
                 this.rootView = rootView;
@@ -318,19 +334,44 @@ public class ExpenseTimelineFragment extends Fragment {
 
         public class ExpenseViewHolder extends TimelineAdapter.ViewHolder {
             public TextView expense;
-            public ExpenseViewHolder(View rootView, TextView expense) {
+            public ImageButton icon;
+            public ImageButton edit;
+            public ImageButton delete;
+            public ExpenseViewHolder(View rootView, final TextView expense, ImageButton icon, final ImageButton edit, final ImageButton delete) {
                 super(rootView);
                 this.expense = expense;
+                this.icon = icon;
+                this.edit = edit;
+                this.delete = delete;
+                this.icon.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (isEditMode) {
+                            isEditMode = false;
+                            expense.setVisibility(View.VISIBLE);
+                            delete.setVisibility(View.INVISIBLE);
+                            edit.setVisibility(View.INVISIBLE);
+                        } else {
+                            isEditMode = true;
+                            expense.setVisibility(View.INVISIBLE);
+                            delete.setVisibility(View.VISIBLE);
+                            edit.setVisibility(View.VISIBLE);
+                        }
+                    }
+                });
             }
         }
 
         public class IncomeViewHolder extends TimelineAdapter.ViewHolder {
             public TextView income;
-            public IncomeViewHolder(View rootView, TextView income) {
+            public ImageButton icon;
+            public IncomeViewHolder(View rootView, TextView income, ImageButton icon) {
                 super(rootView);
                 this.income = income;
+                this.icon = icon;
             }
         }
+
 
         @Override
         public TimelineAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -344,20 +385,26 @@ public class ExpenseTimelineFragment extends Fragment {
                 case 1:
                     View dailyRootView = layoutInflater.inflate(R.layout.expense_item, parent, false);
                     TextView dailyIncomTextView = (TextView) dailyRootView.findViewById(R.id.incomeItem);
-                    return new IncomeViewHolder(dailyRootView, dailyIncomTextView);
+                    ImageButton icon = (ImageButton) dailyRootView.findViewById(R.id.categoryIcon);
+                    return new IncomeViewHolder(dailyRootView, dailyIncomTextView, icon);
                 case 2:
                     View dailyExpenseRootView = layoutInflater.inflate(R.layout.expense_item, parent, false);
                     TextView dailyExpense = (TextView) dailyExpenseRootView.findViewById(R.id.expenseItem);
-                    return new ExpenseViewHolder(dailyExpenseRootView, dailyExpense);
+                    ImageButton icon2 = (ImageButton) dailyExpenseRootView.findViewById(R.id.categoryIcon);
+                    ImageButton edit = (ImageButton) dailyExpenseRootView.findViewById(R.id.edit);
+                    ImageButton delete = (ImageButton) dailyExpenseRootView.findViewById(R.id.delete);
+                    return new ExpenseViewHolder(dailyExpenseRootView, dailyExpense, icon2, edit, delete);
             }
 
             return null;
         }
 
+
+
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
 
-            TimeLineItem item = items.get(position);
+            final TimeLineItem item = items.get(position);
 
             if (item instanceof DateItem ) {
                 DateViewHolder dateViewHolder = (DateViewHolder) holder;
@@ -366,6 +413,12 @@ public class ExpenseTimelineFragment extends Fragment {
             } else if (item instanceof ExpenseItem) {
                 ExpenseViewHolder expenseViewHolder = (ExpenseViewHolder)holder;
                 expenseViewHolder.expense.setText(((ExpenseItem) item).category + ": " + item.sum);
+                expenseViewHolder.delete.setOnClickListener(new ImageButton.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        deleteItem(item);
+                    }
+                });
             } else if (item instanceof IncomeItem) {
                 IncomeViewHolder incomeViewHolder = (IncomeViewHolder)holder;
                 incomeViewHolder.income.setText(((IncomeItem) item).category + ": " + item.sum);

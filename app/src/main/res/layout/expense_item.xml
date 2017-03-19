@@ -11,7 +11,7 @@
         android:layout_height="wrap_content">
 
         <ImageButton
-            android:id="@+id/imageButton"
+            android:id="@+id/categoryIcon"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_marginLeft="8dp"
@@ -30,7 +30,7 @@
             android:layout_marginTop="63dp"
             android:textSize="12sp"
             android:visibility="visible"
-            app:layout_constraintLeft_toRightOf="@+id/imageButton"
+            app:layout_constraintLeft_toRightOf="@+id/categoryIcon"
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
@@ -40,7 +40,7 @@
             android:layout_marginBottom="0dp"
             android:layout_marginTop="0dp"
             android:background="@android:color/darker_gray"
-            app:layout_constraintBottom_toTopOf="@+id/imageButton"
+            app:layout_constraintBottom_toTopOf="@+id/categoryIcon"
             app:layout_constraintHorizontal_bias="0.501"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
@@ -55,8 +55,30 @@
             android:layout_marginRight="21dp"
             android:layout_marginTop="63dp"
             android:textSize="12sp"
-            app:layout_constraintRight_toLeftOf="@+id/imageButton"
+            app:layout_constraintRight_toLeftOf="@+id/categoryIcon"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageButton
+            android:id="@+id/delete"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginLeft="32dp"
+            android:layout_marginTop="56dp"
+            android:visibility="invisible"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@android:drawable/ic_delete" />
+
+        <ImageButton
+            android:id="@+id/edit"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginRight="32dp"
+            android:layout_marginTop="56dp"
+            android:visibility="invisible"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@android:drawable/ic_menu_edit" />
 
     </android.support.constraint.ConstraintLayout>
 </LinearLayout>

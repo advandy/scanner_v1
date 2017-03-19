@@ -2,13 +2,16 @@ package cheng.yunhan.scanner_v1;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.DataSetObserver;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
@@ -18,10 +21,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 
 import com.theartofdev.edmodo.cropper.CropImage;
@@ -35,6 +42,7 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.zip.Inflater;
 
 import static android.R.attr.bitmap;
 
@@ -43,17 +51,17 @@ public class MainActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
     private CustomAdapter viewAdapter;
     private File imageFile;
-    private TextView noFileTv;
+    private ItemsAdapter itemsAdapter;
+    private Spinner spinner;
+    private DAO dao;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setTitle("Butler");
 
         viewAdapter = new CustomAdapter(this,new ArrayList<ImageDocument>());
-        GridView gridView = (GridView) findViewById(R.id.gridView);
-        gridView.setAdapter(viewAdapter);
-        noFileTv = (TextView)findViewById(R.id.noFileTV);
 
         FloatingActionButton scanBtn = (FloatingActionButton) findViewById(R.id.scan);
         scanBtn.setOnClickListener(new OnClickListener() {
@@ -63,17 +71,59 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        /*File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File[] imageFiles = storageDir.listFiles();
         Log.e("files", String.valueOf(imageFiles));
-        if (imageFiles.length > 0) {
-            noFileTv.setVisibility(View.INVISIBLE);
-        }
+
         for (File imageFile: imageFiles) {
             String name = imageFile.getName();
             String imagePath = imageFile.getAbsolutePath();
             Bitmap image = decodeSampledBitmapFromFile(imagePath, 1000, 1000);
             viewAdapter.add(new ImageDocument(name, image, imagePath));
+        } */
+        itemsAdapter = new ItemsAdapter(this,0);
+        spinner = (Spinner) findViewById(R.id.spinner);
+        ImageButton add = (ImageButton) findViewById(R.id.addItem);
+        dao = DAO.getInstance(this);
+        add.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //dao.addItem("REWE", "Coca Cola", "Drink", 1.99, 19, 3, 2017);
+                dao.queryItemsByDay(19,3,2017);
+                itemsAdapter.add(new Item("new", 0.00));
+            }
+        });
+
+        ListView listView = (ListView) findViewById(R.id.itemsList);
+
+
+        listView.setAdapter(itemsAdapter);
+    }
+    public class Item {
+        public Item(String categoryName, Double sum) {
+            this.categoryName = categoryName;
+            this.sum = sum;
+        }
+
+        public String categoryName;
+        public Double sum;
+    }
+    public class ItemsAdapter extends ArrayAdapter<Item> {
+
+        public ItemsAdapter(@NonNull Context context, @LayoutRes int resource) {
+            super(context, resource);
+        }
+
+        @NonNull
+        @Override
+        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+            Item item = getItem(position);
+            View rootView = LayoutInflater.from(parent.getContext()).inflate(R.layout.shopping_item, parent, false);
+            TextView mName = (TextView) rootView.findViewById(R.id.itemCategory);
+            mName.setText(item.categoryName);
+            TextView mSum = (TextView) rootView.findViewById(R.id.itemSum);
+            mSum.setText(item.sum + "");
+            return rootView;
         }
     }
 
@@ -185,7 +235,6 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 viewAdapter.add(imageDocument);
-                noFileTv.setVisibility(View.INVISIBLE);
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                 Exception error = result.getError();
             } else if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE && resultCode == RESULT_CANCELED) {
