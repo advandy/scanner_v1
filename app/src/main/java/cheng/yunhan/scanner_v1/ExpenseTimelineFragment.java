@@ -176,6 +176,7 @@ public class ExpenseTimelineFragment extends Fragment {
             monthlyExpense = DAOUtils.queryMonthlyExpenseSum(3, 2017);
 
             ArrayList<ContentValues> values = DAOUtils.queryItemsByMonth(19, 3,2017);
+
             for (ContentValues obj : values) {
                 Integer day = obj.getAsInteger("day");
                 if (timelineDataSet.get(day) == null) {
