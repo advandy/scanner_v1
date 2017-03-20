@@ -1,5 +1,6 @@
 package cheng.yunhan.scanner_v1;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -23,6 +24,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -64,6 +66,13 @@ public class ExpenseTimelineFragment extends Fragment {
     private TreeMap<Date, ArrayList<TimeLineItem>> monthlyRecordsCollection = new TreeMap<>(new Comparator<Date>() {
         @Override
         public int compare(Date o1, Date o2) {
+            return o2.compareTo(o1);
+        }
+    });
+
+    private TreeMap<Integer, ArrayList<ContentValues>> timelineDataSet = new TreeMap<>(new Comparator<Integer>() {
+        @Override
+        public int compare(Integer o1, Integer o2) {
             return o2.compareTo(o1);
         }
     });
@@ -124,65 +133,58 @@ public class ExpenseTimelineFragment extends Fragment {
         mTimelineAdapter = new TimelineAdapter(new ArrayList<TimeLineItem>());
         timelineRV.setAdapter(mTimelineAdapter);
 
-        monthlyExpenseTv = (TextView) rootView.findViewById(R.id.expenseItem);
-        monthlyIncomeTv = (TextView) rootView.findViewById(R.id.incomeItem);
+        monthlyExpenseTv = (TextView) rootView.findViewById(R.id.monthlyExpenseSum);
+        monthlyIncomeTv = (TextView) rootView.findViewById(R.id.monthlyIncomeSum);
 
         FloatingActionButton fab = (FloatingActionButton)rootView.findViewById(R.id.addExpense);
         fab.setOnClickListener(new FloatingActionButton.OnClickListener() {
             @Override
             public void onClick(View view) {
                 //new AddRecord().execute(new ExpenseItem("09-03", 22, "Tennis"));
-                Intent intent = new Intent(getContext(), MainActivity.class);
-                startActivity(intent);
+                //Intent intent = new Intent(getContext(), MainActivity.class);
+                //startActivity(intent);
+                DAOUtils.addExpenseItem("REWE", "Coca Cola", "Drink", 1.99, 19, 3, 2017);
+                DAOUtils.addExpenseItem("REWE", "Coca Cola 1", "Drink", 1.99, 19, 3, 2017);
+
+                DAOUtils.addExpenseItem("LIDL", "Coca Cola 1", "Drink", 1.99, 19, 3, 2017);
+                DAOUtils.addExpenseItem("LIDL", "Coca Cola 1", "Drink", 1.99, 19, 3, 2017);
+
+                DAOUtils.addIncomeItem("Salary", 1000.00, 1,3,2017);
+
+                DAOUtils.addExpenseItem("REWE", "Coca Cola 2", "Drink", 1.99, 18, 3, 2017);
+                DAOUtils.addExpenseItem("REWE", "Coca Cola 3", "Drink", 1.99,  18, 3, 2017);
+                DAOUtils.addExpenseItem("REWE", "Coca Cola 4", "Drink", 1.99, 18, 3, 2017);
+
+                new QueryMonthlyRecords().execute("Book");
             }
         });
 
-        new InitTimeLine().execute("Book");
+        new QueryMonthlyRecords().execute("Book");
 
 
         return rootView;
     }
 
-    private class InitTimeLine extends AsyncTask<String, Void, Void> {
+    private class QueryMonthlyRecords extends AsyncTask<String, Void, Void> {
 
 
         @Override
         protected Void doInBackground(String... params) {
-            DAOUtils.queryItemsByMonth(3, 2017);
-/*            DateFormat dateFormat = new SimpleDateFormat("dd-mm");
-            String dateStr = "16-03";
-            Date date = null;
-            try {
-                date = dateFormat.parse(dateStr);
-            } catch (ParseException e) {
-                e.printStackTrace();
+            timelineDataSet.clear();
+
+            monthlyIncome = DAOUtils.queryMonthlyIncomeSum(3, 2017);
+            monthlyExpense = DAOUtils.queryMonthlyExpenseSum(3, 2017);
+
+            ArrayList<ContentValues> values = DAOUtils.queryItemsByMonth(19, 3,2017);
+            for (ContentValues obj : values) {
+                Integer day = obj.getAsInteger("day");
+                if (timelineDataSet.get(day) == null) {
+                    timelineDataSet.put(day, new ArrayList<ContentValues>(Arrays.asList(obj)));
+                } else {
+                    timelineDataSet.get(day).add(obj);
+                }
             }
 
-            dateStr = "12-03";
-            Date date1 = new Date();
-            try {
-                date1 = dateFormat.parse(dateStr);
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-
-            dateStr = "19-03";
-            Date date2 = new Date();
-            try {
-                date2 = dateFormat.parse(dateStr);
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-
-            DateItem dateItem = new DateItem("16-03", 100, UUID.randomUUID());
-            ExpenseItem expenseItem1 = new ExpenseItem("16-03", 20, "shopping", UUID.randomUUID());
-            ExpenseItem expenseItem2 = new ExpenseItem("16-03", 10, "sport",UUID.randomUUID());
-            ExpenseItem expenseItem3 = new ExpenseItem("16-03", 2, "traffic",UUID.randomUUID());
-            IncomeItem incomeItem = new IncomeItem("16-03", 2000, "bonus",UUID.randomUUID());
-
-            monthlyRecordsCollection.put(date2, new ArrayList<TimeLineItem>(Arrays.asList(expenseItem1, incomeItem, expenseItem3, expenseItem2)));
-            monthlyRecordsCollection.put(date1, new ArrayList<TimeLineItem>(Arrays.asList(expenseItem1, expenseItem1, expenseItem2)));
-            monthlyRecordsCollection.put(date, new ArrayList<TimeLineItem>(Arrays.asList(expenseItem1, expenseItem3, expenseItem2, incomeItem)));*/
 
             return null;
         }
@@ -190,7 +192,7 @@ public class ExpenseTimelineFragment extends Fragment {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            updateView(monthlyRecordsCollection);
+            updateView();
 
         }
     }
@@ -212,7 +214,7 @@ public class ExpenseTimelineFragment extends Fragment {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            updateView(monthlyRecordsCollection);
+            //updateView(monthlyRecordsCollection);
         }
     }
 
@@ -230,33 +232,43 @@ public class ExpenseTimelineFragment extends Fragment {
         }
     }
 
-    private void updateView(TreeMap<Date, ArrayList<TimeLineItem>> records) {
-        DateFormat dateFormat = new SimpleDateFormat("dd-mm");
-        mTimelineAdapter.items.clear();
-        for (Map.Entry<Date, ArrayList<TimeLineItem>> entry: records.entrySet()) {
-            Date key = entry.getKey();
-            Double sum = 0.00;
+    private void updateView() {
 
-            ArrayList<TimeLineItem> values = entry.getValue();
-            for (TimeLineItem value : values) {
-                sum = sum + value.sum;
+        monthlyIncomeTv.setText(new DecimalFormat("#.##").format(monthlyIncome));
+        monthlyExpenseTv.setText(new DecimalFormat("#.##").format(monthlyExpense));
+
+        mTimelineAdapter.items.clear();
+        ArrayList<TimeLineItem> timeLineItems;
+        for (Map.Entry<Integer, ArrayList<ContentValues>> entry: timelineDataSet.entrySet()) {
+            String dateKey = "";
+            Double sum = 0.00;
+            timeLineItems = new ArrayList<>();
+            ArrayList<ContentValues> values = entry.getValue();
+            for (ContentValues value : values) {
+                dateKey = value.getAsString("day")+ "-" +value.getAsString("month");
+                if (value.getAsDouble("income_sum") != null) {
+                    timeLineItems.add(new IncomeItem(dateKey, value.getAsDouble("income_sum"), value.getAsString("income_category")));
+                } else {
+                    sum = sum + value.getAsDouble("sum");
+                    timeLineItems.add(new ExpenseItem(dateKey, value.getAsDouble("sum"), value.getAsString("shop")));
+                }
             }
-            mTimelineAdapter.items.add(new DateItem(dateFormat.format(key), sum, UUID.randomUUID()));
-            mTimelineAdapter.items.addAll(values);
+
+            mTimelineAdapter.items.add(new DateItem(dateKey, sum, UUID.randomUUID()));
+            mTimelineAdapter.items.addAll(timeLineItems);
         }
+
         mTimelineAdapter.notifyDataSetChanged();
     }
 
 
     public class TimeLineItem {
-        public UUID id;
         public String date;
         public double sum;
 
-        public TimeLineItem(String date, double sum, UUID id) {
+        public TimeLineItem(String date, double sum) {
             this.date = date;
             this.sum = sum;
-            this.id = id;
         }
 
     }
@@ -264,15 +276,15 @@ public class ExpenseTimelineFragment extends Fragment {
     public class DateItem extends  TimeLineItem {
 
         public DateItem(String date, double sum, UUID id) {
-            super(date, sum, id);
+            super(date, sum);
         }
     }
 
     public class ExpenseItem extends TimeLineItem {
         public String category;
 
-        public ExpenseItem(String date, double sum, String category, UUID id) {
-            super(date, sum, id);
+        public ExpenseItem(String date, double sum, String category) {
+            super(date, sum);
             this.category = category;
         }
     }
@@ -280,8 +292,8 @@ public class ExpenseTimelineFragment extends Fragment {
     public class IncomeItem extends TimeLineItem {
         public String category;
 
-        public IncomeItem(String date, double sum, String category, UUID id) {
-            super(date, sum, id);
+        public IncomeItem(String date, double sum, String category) {
+            super(date, sum);
             this.category = category;
         }
     }
