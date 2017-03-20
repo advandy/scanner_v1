@@ -35,7 +35,38 @@ public class DAO {
         this.db = dbHelper.getWritableDatabase();
     }
 
-    public long addItem(String shop, String article, String category, Double sum, int day, int month, int year) {
+
+    public double queryMonthlyIncomeSum(int month, int year) {
+        Cursor cursor= db.rawQuery("Select sum(income_sum) as income_sum from item where month=" + month + " AND year=" + year, null);
+        Double reVal = 0.00;
+        if (cursor.moveToFirst()) {
+            reVal = cursor.getDouble(0);
+        }
+        cursor.close();
+        return reVal;
+    }
+
+    public double queryMonthlyExpenseSum(int month, int year) {
+        Cursor cursor= db.rawQuery("Select sum(sum) as sum from item where month=" + month + " AND year=" + year, null);
+        Double reVal = 0.00;
+        if (cursor.moveToFirst()) {
+            reVal = cursor.getDouble(0);
+        }
+        cursor.close();
+        return reVal;
+    }
+
+    public long addIncomeItem(String category, Double sum, int day, int month, int year) {
+        ContentValues values = new ContentValues();
+        values.put(ItemEntry.COLUMN_NAME_INCOMECATEGORY, category);
+        values.put(ItemEntry.COLUMN_NAME_INCOMESUM, sum);
+        values.put(ItemEntry.COLUMN_NAME_DAY, day);
+        values.put(ItemEntry.COLUMN_NAME_MONTH, month);
+        values.put(ItemEntry.COLUMN_NAME_YEAR, year);
+        return db.insert(ItemEntry.TABLE_NAME, null, values);
+    }
+
+    public long addExpenseItem(String shop, String article, String category, Double sum, int day, int month, int year) {
         ContentValues values = new ContentValues();
         values.put(ItemEntry.COLUMN_NAME_SHOP, shop);
         values.put(ItemEntry.COLUMN_NAME_ARTICLE, article);
@@ -47,12 +78,12 @@ public class DAO {
         return db.insert(ItemEntry.TABLE_NAME, null, values);
     }
 
-    public void queryItemsByMonth(int month, int year) {
+    public ArrayList<ContentValues> queryItemsByMonth(int day, int month, int year) {
         String[] projection = {
                 ItemEntry._ID,
-                ItemEntry.COLUMN_NAME_ARTICLE,
-                ItemEntry.COLUMN_NAME_CATEGORY,
-                ItemEntry.COLUMN_NAME_SUM,
+                ItemEntry.COLUMN_NAME_INCOMECATEGORY,
+                "SUM (" + ItemEntry.COLUMN_NAME_INCOMESUM + ") AS income_sum",
+                "SUM (" + ItemEntry.COLUMN_NAME_INCOMESUM + ") AS income_sum",
                 ItemEntry.COLUMN_NAME_SHOP,
                 ItemEntry.COLUMN_NAME_DAY,
                 ItemEntry.COLUMN_NAME_MONTH,
@@ -78,10 +109,7 @@ public class DAO {
                 sortOrder                                 // The sort order
         );*/
 
-        Cursor cursor = db.rawQuery("Select day, month, shop,sum(sum) as sum from item where month=3 AND year=2017 group by day, shop order by day DESC", null);
-
-        //cursor = db.rawQuery("Select day from item", null);
-                //Cursor cursor = db.rawQuery("Select * from " + ItemEntry.TABLE_NAME, null);
+        Cursor cursor = db.rawQuery("Select day, month, shop,sum(sum) as sum, sum(income_sum) as income_sum, income_category from item where month=3 AND year=2017 group by day, shop, income_category order by day DESC", null);
 
         ArrayList<ContentValues> retVal = new ArrayList<ContentValues>();
         ContentValues map;
@@ -93,6 +121,8 @@ public class DAO {
         }
         cursor.close();
 
+        return retVal;
+
     }
 
     public static class ItemEntry implements BaseColumns {
@@ -101,6 +131,8 @@ public class DAO {
         public static final String COLUMN_NAME_ARTICLE = "article";
         public static final String COLUMN_NAME_CATEGORY = "category";
         public static final String COLUMN_NAME_SUM = "sum";
+        public static final String COLUMN_NAME_INCOMESUM = "income_sum";
+        public static final String COLUMN_NAME_INCOMECATEGORY = "income_category";
         public static final String COLUMN_NAME_DAY = "day";
         public static final String COLUMN_NAME_MONTH = "month";
         public static final String COLUMN_NAME_YEAR = "year";
@@ -116,14 +148,16 @@ public class DAO {
                     ItemEntry.COLUMN_NAME_DAY + " NUMBER," +
                     ItemEntry.COLUMN_NAME_MONTH + " NUMBER," +
                     ItemEntry.COLUMN_NAME_YEAR + " NUMBER," +
-                    ItemEntry.COLUMN_NAME_SUM + " DOUBLE)";
+                    ItemEntry.COLUMN_NAME_SUM + " DOUBLE," +
+                    ItemEntry.COLUMN_NAME_INCOMECATEGORY + " TEXT," +
+                    ItemEntry.COLUMN_NAME_INCOMESUM + " DOUBLE)";
 
     private static final String SQL_DELETE_ENTRIES =
             "DROP TABLE IF EXISTS " + ItemEntry.TABLE_NAME;
 
     public class DBHelper extends SQLiteOpenHelper {
         // If you change the database schema, you must increment the database version.
-        public static final int DATABASE_VERSION = 1;
+        public static final int DATABASE_VERSION = 2;
         public static final String DATABASE_NAME = "Butler.db";
 
         public DBHelper(Context context) {
