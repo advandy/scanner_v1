@@ -3,9 +3,13 @@ package cheng.yunhan.scanner_v1;
 import android.app.Dialog;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.media.Image;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -24,10 +28,13 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.GridView;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.theartofdev.edmodo.cropper.CropImage;
@@ -232,6 +239,7 @@ public class ExpenseTimelineFragment extends Fragment {
                 new QueryMonthlyRecords().execute("Book");*/
 
                 final Dialog dialog = new Dialog(getContext());
+                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
                 dialog.setContentView(R.layout.input_modes_popup);
                 //dialog.setTitle("OCR Result");
                 //((TextView)dialog.findViewById(R.id.ocrTextView)).setText(text);
@@ -242,8 +250,36 @@ public class ExpenseTimelineFragment extends Fragment {
                     @Override
                     public void onClick(View v) {
                         dialog.dismiss();
-                        Intent intent = new Intent(getContext(), takePhotoActivity.class);
-                        startActivityForResult(intent, REQUEST_SCAN);
+                        final SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+                        if (!sharedPref.getBoolean("hideTutorialDialog", false)) {
+                            final Dialog tutorialDialog = new Dialog(getContext(), android.R.style.Theme_Light_NoTitleBar_Fullscreen);
+                            tutorialDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                            tutorialDialog.setContentView(R.layout.take_photo_tutorial);
+                            final CheckBox checkBox = (CheckBox) tutorialDialog.findViewById(R.id.noShow);
+                            Button dismiss = (Button)tutorialDialog.findViewById(R.id.launchCamera);
+                            dismiss.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    SharedPreferences.Editor editor = sharedPref.edit();
+                                    editor.putBoolean("hideTutorialDialog", checkBox.isChecked());
+                                    editor.commit();
+                                    tutorialDialog.dismiss();
+                                }
+                            });
+                            //dialog.setTitle("OCR Result");
+                            //((TextView)dialog.findViewById(R.id.ocrTextView)).setText(text);
+                            tutorialDialog.show();
+                            tutorialDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                                @Override
+                                public void onDismiss(DialogInterface dialog) {
+                                    Intent intent = new Intent(getContext(), takePhotoActivity.class);
+                                    startActivityForResult(intent, REQUEST_SCAN);
+                                }
+                            });
+                        } else {
+                            Intent intent = new Intent(getContext(), takePhotoActivity.class);
+                            startActivityForResult(intent, REQUEST_SCAN);
+                        }
                     }
                 });
             }
