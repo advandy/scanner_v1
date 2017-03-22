@@ -171,9 +171,14 @@ public class OcrDetailActivity extends AppCompatActivity {
                 return;
             }
 
-            showOCRResult(result);
+            //showOCRResult(result);
 
             pb.setVisibility(View.INVISIBLE);
+
+            Intent intent = new Intent();
+            intent.putExtra("data", "data");
+            setResult(RESULT_OK, intent);
+            finish();
         }
     }
 

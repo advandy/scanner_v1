@@ -1,16 +1,22 @@
 package cheng.yunhan.scanner_v1;
 
+import android.app.Dialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.Image;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.FileProvider;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -19,10 +25,19 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.theartofdev.edmodo.cropper.CropImage;
+import com.theartofdev.edmodo.cropper.CropImageView;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -40,6 +55,9 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import static android.app.Activity.RESULT_CANCELED;
+import static android.app.Activity.RESULT_OK;
+
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
@@ -53,6 +71,12 @@ public class ExpenseTimelineFragment extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
+    static final int DISPLAY_DAILY_EXPENSE = 1;
+    static final int REQUEST_IMAGE_CAPTURE = 2;
+    static final int REQUEST_SCAN = 3;
+
+    private File imageFile;
+
     private DAO DAOUtils;
 
     // TODO: Rename and change types of parameters
@@ -120,6 +144,56 @@ public class ExpenseTimelineFragment extends Fragment {
     }
 
     @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        //super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == DISPLAY_DAILY_EXPENSE && resultCode == RESULT_OK) {
+            Boolean isUpdated = data.getBooleanExtra("updated", false);
+            if (isUpdated) {
+                new QueryMonthlyRecords().execute();
+            }
+        }
+
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+
+            CropImage.activity(Uri.fromFile(imageFile))
+                    .setGuidelines(CropImageView.Guidelines.ON)
+                    .start(mainActivity);
+        } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_CANCELED) {
+            imageFile.delete();
+        }
+
+        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
+            CropImage.ActivityResult result = CropImage.getActivityResult(data);
+            if (resultCode == RESULT_OK) {
+                Intent toDetailIntent = new Intent(getContext(), OcrDetailActivity.class);
+                toDetailIntent.putExtra("imagePath", result.getUri().getPath());
+                startActivity(toDetailIntent);
+
+                //MainActivity.ImageDocument imageDocument = new MainActivity.ImageDocument(null, null, null);
+                //imageDocument.timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                Bitmap image = decodeSampledBitmapFromFile(result.getUri().getPath(),1000, 1000);
+                //imageDocument.imagePath = result.getUri().getPath();
+                OutputStream outStream = null;
+                try {
+                    outStream = new FileOutputStream(imageFile);
+                    image.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+                    outStream.flush();
+                    outStream.close();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
+                Exception error = result.getError();
+            } else if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE && resultCode == RESULT_CANCELED) {
+                imageFile.delete();
+            }
+        }
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_expense_main, container, false);
@@ -143,7 +217,7 @@ public class ExpenseTimelineFragment extends Fragment {
                 //new AddRecord().execute(new ExpenseItem("09-03", 22, "Tennis"));
                 //Intent intent = new Intent(getContext(), MainActivity.class);
                 //startActivity(intent);
-                DAOUtils.addExpenseItem("REWE", "Coca Cola", "Drink", 1.99, 19, 3, 2017);
+            /*    DAOUtils.addExpenseItem("REWE", "Coca Cola", "Drink", 1.99, 19, 3, 2017);
                 DAOUtils.addExpenseItem("REWE", "Coca Cola 1", "Drink", 1.99, 19, 3, 2017);
 
                 DAOUtils.addExpenseItem("LIDL", "Coca Cola 1", "Drink", 1.99, 19, 3, 2017);
@@ -155,7 +229,23 @@ public class ExpenseTimelineFragment extends Fragment {
                 DAOUtils.addExpenseItem("REWE", "Coca Cola 3", "Drink", 1.99,  18, 3, 2017);
                 DAOUtils.addExpenseItem("REWE", "Coca Cola 4", "Drink", 1.99, 18, 3, 2017);
 
-                new QueryMonthlyRecords().execute("Book");
+                new QueryMonthlyRecords().execute("Book");*/
+
+                final Dialog dialog = new Dialog(getContext());
+                dialog.setContentView(R.layout.input_modes_popup);
+                //dialog.setTitle("OCR Result");
+                //((TextView)dialog.findViewById(R.id.ocrTextView)).setText(text);
+                dialog.show();
+
+                final Button takePhoto = (Button)dialog.findViewById(R.id.scan_input);
+                takePhoto.setOnClickListener(new Button.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                        Intent intent = new Intent(getContext(), takePhotoActivity.class);
+                        startActivityForResult(intent, REQUEST_SCAN);
+                    }
+                });
             }
         });
 
@@ -163,6 +253,47 @@ public class ExpenseTimelineFragment extends Fragment {
 
 
         return rootView;
+    }
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        return image;
+    }
+    private void takePhoto() {
+        File file = null;
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getContext().getPackageManager()) != null) {
+            //file = new File(Environment.getExternalStorageDirectory()+File.separator + "temp_image_scanner.jpg");
+            try {
+                file = createImageFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            if (file != null) {
+                if (Build.VERSION.SDK_INT >= 24) {
+                    Uri photoURI = FileProvider.getUriForFile(getContext(),
+                            "cheng.yunhan.scanner_v1.provider",
+                            file);
+                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                } else {
+                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file));
+                }
+                imageFile = file;
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            }
+        }
     }
 
     private class QueryMonthlyRecords extends AsyncTask<String, Void, Void> {
@@ -175,7 +306,7 @@ public class ExpenseTimelineFragment extends Fragment {
             monthlyIncome = DAOUtils.queryMonthlyIncomeSum(3, 2017);
             monthlyExpense = DAOUtils.queryMonthlyExpenseSum(3, 2017);
 
-            ArrayList<ContentValues> values = DAOUtils.queryItemsByMonth(19, 3,2017);
+            ArrayList<ContentValues> values = DAOUtils.queryItemsByMonth(3, 2017);
 
             for (ContentValues obj : values) {
                 Integer day = obj.getAsInteger("day");
@@ -223,7 +354,7 @@ public class ExpenseTimelineFragment extends Fragment {
 
     private void addRecord(TimeLineItem record) throws ParseException {
         DateFormat dateFormat = new SimpleDateFormat("dd-mm");
-        Date key = dateFormat.parse(record.date);
+        Date key = dateFormat.parse(record.contentValues.getAsString("date"));
         ArrayList<TimeLineItem> values =  monthlyRecordsCollection.get(key);
 
         if (values == null) {
@@ -248,14 +379,14 @@ public class ExpenseTimelineFragment extends Fragment {
             for (ContentValues value : values) {
                 dateKey = value.getAsString("day")+ "-" +value.getAsString("month");
                 if (value.getAsDouble("income_sum") != null) {
-                    timeLineItems.add(new IncomeItem(dateKey, value.getAsDouble("income_sum"), value.getAsString("income_category")));
+                    timeLineItems.add(new IncomeItem(value));
                 } else {
                     sum = sum + value.getAsDouble("sum");
-                    timeLineItems.add(new ExpenseItem(dateKey, value.getAsDouble("sum"), value.getAsString("shop")));
+                    timeLineItems.add(new ExpenseItem(value));
                 }
             }
 
-            mTimelineAdapter.items.add(new DateItem(dateKey, sum, UUID.randomUUID()));
+            mTimelineAdapter.items.add(new DateItem(dateKey, sum));
             mTimelineAdapter.items.addAll(timeLineItems);
         }
 
@@ -264,42 +395,33 @@ public class ExpenseTimelineFragment extends Fragment {
 
 
     public class TimeLineItem {
-        public String date;
-        public double sum;
-
-        public TimeLineItem(String date, double sum) {
-            this.date = date;
-            this.sum = sum;
-        }
-
+        public ContentValues contentValues;
     }
 
     public class DateItem extends  TimeLineItem {
-
-        public DateItem(String date, double sum, UUID id) {
-            super(date, sum);
+        public String date;
+        public double sum;
+        public DateItem(String date, double sum) {
+            this.date = date;
+            this.sum = sum;
         }
     }
 
     public class ExpenseItem extends TimeLineItem {
-        public String category;
+        public ContentValues contentValues;
 
-        public ExpenseItem(String date, double sum, String category) {
-            super(date, sum);
-            this.category = category;
+        public ExpenseItem(ContentValues contentValues) {
+            this.contentValues = contentValues;
         }
     }
+
 
     public class IncomeItem extends TimeLineItem {
-        public String category;
+        public ContentValues contentValues;
 
-        public IncomeItem(String date, double sum, String category) {
-            super(date, sum);
-            this.category = category;
+        public IncomeItem(ContentValues contentValues) {
+            this.contentValues = contentValues;
         }
-    }
-    public interface onIconClicked {
-        public void enableEdit();
     }
 
     public void deleteItem(TimeLineItem item) {
@@ -330,7 +452,14 @@ public class ExpenseTimelineFragment extends Fragment {
 
         public class ViewHolder extends RecyclerView.ViewHolder {
             public View rootView;
+            public ImageButton icon;
             public boolean isEditMode = false;
+            public ViewHolder(View rootView, ImageButton icon) {
+                super(rootView);
+                this.rootView = rootView;
+                this.icon = icon;
+            }
+
             public ViewHolder(View rootView) {
                 super(rootView);
                 this.rootView = rootView;
@@ -359,7 +488,7 @@ public class ExpenseTimelineFragment extends Fragment {
                 this.icon = icon;
                 this.edit = edit;
                 this.delete = delete;
-                this.icon.setOnClickListener(new View.OnClickListener() {
+/*                this.icon.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         if (isEditMode) {
@@ -374,7 +503,7 @@ public class ExpenseTimelineFragment extends Fragment {
                             edit.setVisibility(View.VISIBLE);
                         }
                     }
-                });
+                });*/
             }
         }
 
@@ -424,20 +553,29 @@ public class ExpenseTimelineFragment extends Fragment {
 
             if (item instanceof DateItem ) {
                 DateViewHolder dateViewHolder = (DateViewHolder) holder;
-                dateViewHolder.date.setText(item.date);
-                dateViewHolder.dateSum.setText(item.sum + "");
+                dateViewHolder.date.setText(((DateItem)item).date);
+                dateViewHolder.dateSum.setText(((DateItem)item).sum + "");
             } else if (item instanceof ExpenseItem) {
                 ExpenseViewHolder expenseViewHolder = (ExpenseViewHolder)holder;
-                expenseViewHolder.expense.setText(((ExpenseItem) item).category + ": " + item.sum);
-                expenseViewHolder.delete.setOnClickListener(new ImageButton.OnClickListener() {
+                expenseViewHolder.expense.setText(((ExpenseItem) item).contentValues.getAsString(DAO.ItemEntry.COLUMN_NAME_SHOP) + " " + (((ExpenseItem) item).contentValues.getAsString(DAO.ItemEntry.COLUMN_NAME_SUM)));
+                expenseViewHolder.icon.setOnClickListener(new ImageButton.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        deleteItem(item);
+                        Integer day = ((ExpenseItem) item).contentValues.getAsInteger("day");
+                        Integer month = ((ExpenseItem) item).contentValues.getAsInteger("month");
+                        String shop = ((ExpenseItem) item).contentValues.getAsString("shop");
+                        Intent intent = new Intent(getContext(), DailyExpenseList.class);
+                        intent.putExtra("day", day);
+                        intent.putExtra("month", month);
+                        intent.putExtra("shop", shop);
+                        startActivityForResult(intent, DISPLAY_DAILY_EXPENSE);
+
                     }
                 });
             } else if (item instanceof IncomeItem) {
                 IncomeViewHolder incomeViewHolder = (IncomeViewHolder)holder;
-                incomeViewHolder.income.setText(((IncomeItem) item).category + ": " + item.sum);
+
+                incomeViewHolder.income.setText(((IncomeItem)item).contentValues.getAsString(DAO.ItemEntry.COLUMN_NAME_INCOMECATEGORY) + " " + (((IncomeItem)item).contentValues.getAsString(DAO.ItemEntry.COLUMN_NAME_INCOMESUM)));
             }
 
         }
@@ -446,6 +584,40 @@ public class ExpenseTimelineFragment extends Fragment {
         public int getItemCount() {
             return items.size();
         }
+    }
+
+    public static Bitmap decodeSampledBitmapFromFile(String path, int reqWidth, int reqHeight)
+    { // BEST QUALITY MATCH
+
+        //First decode with inJustDecodeBounds=true to check dimensions
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(path, options);
+
+        // Calculate inSampleSize, Raw height and width of image
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        options.inPreferredConfig = Bitmap.Config.RGB_565;
+        int inSampleSize = 1;
+
+        if (height > reqHeight)
+        {
+            inSampleSize = Math.round((float)height / (float)reqHeight);
+        }
+        int expectedWidth = width / inSampleSize;
+
+        if (expectedWidth > reqWidth)
+        {
+            //if(Math.round((float)width / (float)reqWidth) > inSampleSize) // If bigger SampSize..
+            inSampleSize = Math.round((float)width / (float)reqWidth);
+        }
+
+        options.inSampleSize = inSampleSize;
+
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+
+        return BitmapFactory.decodeFile(path, options);
     }
 
 

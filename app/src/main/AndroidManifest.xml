@@ -62,7 +62,9 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
-        <activity android:name=".ExpenseDetailActivity"></activity>
+        <activity android:name=".ExpenseDetailActivity" />
+        <activity android:name=".DailyExpenseList" />
+        <activity android:name=".takePhotoActivity"></activity>
     </application>
 
 </manifest>

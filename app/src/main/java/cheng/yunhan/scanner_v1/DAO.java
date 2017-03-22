@@ -78,12 +78,26 @@ public class DAO {
         return db.insert(ItemEntry.TABLE_NAME, null, values);
     }
 
-    public ArrayList<ContentValues> queryItemsByMonth(int day, int month, int year) {
+    public ArrayList<ContentValues> queryDailyShopItems(int day, int month, int year, String shop) {
+        Cursor cursor = db.rawQuery("Select * from item where day=" + day + " AND month=" + month + " AND year=" + year + " AND shop='" + shop + "'", null);
+        ArrayList<ContentValues> retVal = new ArrayList<ContentValues>();
+        ContentValues map;
+        while(cursor.moveToNext()) {
+
+            map = new ContentValues();
+            DatabaseUtils.cursorRowToContentValues(cursor, map);
+            retVal.add(map);
+        }
+        cursor.close();
+        return retVal;
+    }
+
+    public ArrayList<ContentValues> queryItemsByMonth(int month, int year) {
         String[] projection = {
                 ItemEntry._ID,
                 ItemEntry.COLUMN_NAME_INCOMECATEGORY,
-                "SUM (" + ItemEntry.COLUMN_NAME_INCOMESUM + ") AS income_sum",
-                "SUM (" + ItemEntry.COLUMN_NAME_INCOMESUM + ") AS income_sum",
+                ItemEntry.COLUMN_NAME_INCOMESUM,
+                "SUM (" + ItemEntry.COLUMN_NAME_SUM + ") AS " + ItemEntry.COLUMN_NAME_SUM,
                 ItemEntry.COLUMN_NAME_SHOP,
                 ItemEntry.COLUMN_NAME_DAY,
                 ItemEntry.COLUMN_NAME_MONTH,
@@ -91,27 +105,25 @@ public class DAO {
         };
 
         // Filter results WHERE "title" = 'My Title'
-        String selection = ItemEntry.COLUMN_NAME_MONTH + " = ? AND " +
-                           ItemEntry.COLUMN_NAME_YEAR + " = ?";
+        String selection =  ItemEntry.COLUMN_NAME_MONTH + " = ? AND " +
+                            ItemEntry.COLUMN_NAME_YEAR + " = ?";
         String[] selectionArgs = {String.valueOf(month), String.valueOf(year)};
 
+        String groupBy = ItemEntry.COLUMN_NAME_DAY + ", IFNULL(" + ItemEntry.COLUMN_NAME_SHOP + ", "+ ItemEntry._ID +")";
         // How you want the results sorted in the resulting Cursor
-        String sortOrder =
-                ItemEntry.COLUMN_NAME_DAY + " DESC";
+        String sortOrder = ItemEntry.COLUMN_NAME_DAY + " DESC";
 
-       /* Cursor cursor = db.query(
+        Cursor cursor = db.query(
                 ItemEntry.TABLE_NAME,                     // The table to query
                 projection,                               // The columns to return
                 selection,                                // The columns for the WHERE clause
                 selectionArgs,                            // The values for the WHERE clause
-                ItemEntry.COLUMN_NAME_DAY,                                     // don't group the rows
+                groupBy,                                  // group the rows
                 null,                                     // don't filter by row groups
                 sortOrder                                 // The sort order
-        );*/
+        );
 
-        Cursor cursor = db.rawQuery("Select day, month, shop,sum(sum) as sum, sum(income_sum) as income_sum, income_category from item where month=3 AND year=2017 group by day, shop, income_category order by day DESC", null);
-
-        ArrayList<ContentValues> retVal = new ArrayList<ContentValues>();
+        ArrayList<ContentValues> retVal = new ArrayList<>();
         ContentValues map;
         while(cursor.moveToNext()) {
 
@@ -138,6 +150,7 @@ public class DAO {
         public static final String COLUMN_NAME_YEAR = "year";
 
     }
+
 
     private static final String SQL_CREATE_ENTRIES =
             "CREATE TABLE " + ItemEntry.TABLE_NAME + " (" +
