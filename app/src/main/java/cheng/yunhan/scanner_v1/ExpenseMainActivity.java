@@ -38,7 +38,6 @@ public class ExpenseMainActivity extends AppCompatActivity implements ExpenseTim
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setTheme(android.R.style.Theme_Material_Wallpaper_NoTitleBar);
         setContentView(R.layout.activity_expense_main);
 
         //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);

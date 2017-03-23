@@ -220,14 +220,11 @@ public class ExpenseTimelineFragment extends Fragment {
         monthlyExpenseTv = (TextView) rootView.findViewById(R.id.monthlyExpenseSum);
         monthlyIncomeTv = (TextView) rootView.findViewById(R.id.monthlyIncomeSum);
 
-        FloatingActionButton fab = (FloatingActionButton)rootView.findViewById(R.id.addExpense);
-        fab.setOnClickListener(new FloatingActionButton.OnClickListener() {
+        ImageButton fab = (ImageButton)rootView.findViewById(R.id.addExpense);
+        fab.setOnClickListener(new ImageButton.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //new AddRecord().execute(new ExpenseItem("09-03", 22, "Tennis"));
-                //Intent intent = new Intent(getContext(), MainActivity.class);
-                //startActivity(intent);
-            /*    DAOUtils.addExpenseItem("REWE", "Coca Cola", "Drink", 1.99, 19, 3, 2017);
+/*                DAOUtils.addExpenseItem("REWE", "Coca Cola", "Drink", 1.99, 19, 3, 2017);
                 DAOUtils.addExpenseItem("REWE", "Coca Cola 1", "Drink", 1.99, 19, 3, 2017);
 
                 DAOUtils.addExpenseItem("LIDL", "Coca Cola 1", "Drink", 1.99, 19, 3, 2017);
@@ -262,29 +259,49 @@ public class ExpenseTimelineFragment extends Fragment {
                             ViewPager viewPager = (ViewPager) tutorialDialog.findViewById(R.id.tutorialViewpager);
 
                             viewPager.setAdapter(new CustomViewPagerAdapter());
+                            viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+
+                                View[] dots = {
+                                        tutorialDialog.findViewById(R.id.dot1),
+                                        tutorialDialog.findViewById(R.id.dot2),
+                                        tutorialDialog.findViewById(R.id.dot3),
+                                        tutorialDialog.findViewById(R.id.dot4),
+                                        tutorialDialog.findViewById(R.id.dot5)
+                                };
+                                @Override
+                                public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+                                }
+
+                                @Override
+                                public void onPageSelected(int position) {
+                                    for (View dot:dots) {
+                                        ((ImageView)dot).setImageResource(R.drawable.dot);
+                                    }
+                                    ((ImageView)dots[position]).setImageResource(R.drawable.greydot);
+                                }
+
+                                @Override
+                                public void onPageScrollStateChanged(int state) {
+
+                                }
+                            });
 
 
                             final CheckBox checkBox = (CheckBox) tutorialDialog.findViewById(R.id.noShow);
-                            Button dismiss = (Button)tutorialDialog.findViewById(R.id.launchCamera);
-                            dismiss.setOnClickListener(new View.OnClickListener() {
+                            Button camera = (Button)tutorialDialog.findViewById(R.id.launchCamera);
+                            camera.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
                                     SharedPreferences.Editor editor = sharedPref.edit();
                                     editor.putBoolean("hideTutorialDialog", checkBox.isChecked());
                                     editor.commit();
                                     tutorialDialog.dismiss();
-                                }
-                            });
-                            //dialog.setTitle("OCR Result");
-                            //((TextView)dialog.findViewById(R.id.ocrTextView)).setText(text);
-                            tutorialDialog.show();
-                            tutorialDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                                @Override
-                                public void onDismiss(DialogInterface dialog) {
                                     Intent intent = new Intent(getContext(), takePhotoActivity.class);
                                     startActivityForResult(intent, REQUEST_SCAN);
                                 }
                             });
+                            tutorialDialog.show();
                         } else {
                             Intent intent = new Intent(getContext(), takePhotoActivity.class);
                             startActivityForResult(intent, REQUEST_SCAN);
