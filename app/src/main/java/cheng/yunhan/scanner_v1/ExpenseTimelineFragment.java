@@ -21,6 +21,8 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.FileProvider;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -204,6 +206,7 @@ public class ExpenseTimelineFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_expense_main, container, false);
+
         //TextView textView = (TextView) rootView.findViewById(R.id.section_label);
         //textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
 
@@ -255,6 +258,12 @@ public class ExpenseTimelineFragment extends Fragment {
                             final Dialog tutorialDialog = new Dialog(getContext(), android.R.style.Theme_Light_NoTitleBar_Fullscreen);
                             tutorialDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
                             tutorialDialog.setContentView(R.layout.take_photo_tutorial);
+
+                            ViewPager viewPager = (ViewPager) tutorialDialog.findViewById(R.id.tutorialViewpager);
+
+                            viewPager.setAdapter(new CustomViewPagerAdapter());
+
+
                             final CheckBox checkBox = (CheckBox) tutorialDialog.findViewById(R.id.noShow);
                             Button dismiss = (Button)tutorialDialog.findViewById(R.id.launchCamera);
                             dismiss.setOnClickListener(new View.OnClickListener() {
@@ -289,6 +298,39 @@ public class ExpenseTimelineFragment extends Fragment {
 
 
         return rootView;
+    }
+
+    private class CustomViewPagerAdapter extends PagerAdapter {
+        int[] mResources = {
+            R.drawable.correct,
+            R.drawable.wrong1,
+            R.drawable.wrong2,
+            R.drawable.wrong3,
+            R.drawable.correct
+        };
+
+        @Override
+        public int getCount() {
+            return mResources.length;
+        }
+
+        @Override
+        public Object instantiateItem(ViewGroup container, int position) {
+            ImageView imageView = new ImageView(getContext());
+            imageView.setImageResource(mResources[position]);
+            container.addView(imageView);
+            return imageView;
+        }
+
+        @Override
+        public void destroyItem(ViewGroup container, int position, Object object) {
+            container.removeView((ImageView)object);
+        }
+
+        @Override
+        public boolean isViewFromObject(View view, Object object) {
+            return view == ((ImageView)object);
+        }
     }
 
     private File createImageFile() throws IOException {
