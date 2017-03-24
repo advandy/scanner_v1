@@ -66,16 +66,6 @@ public class ExpenseBooksFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_expense_books, container, false);
-        Button btn = (Button)rootView.findViewById(R.id.chooseBook);
-
-        btn.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mListener != null) {
-                    mListener.onBookChosen("My book");
-                }
-            }
-        });
 
         return rootView;
     }

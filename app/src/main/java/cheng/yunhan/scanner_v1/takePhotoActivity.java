@@ -64,9 +64,7 @@ public class takePhotoActivity extends Activity {
                 imageFile.delete();
                 backToTimeline();
             } else if (resultCode == RESULT_OK) {
-                Log.i("", data.getStringExtra("data"));
-
-                //Navigate to shopping list details
+                // TODO: 24.03.2017 Process response from server
                 imageFile.delete();
                 backToTimeline();
             }

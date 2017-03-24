@@ -78,8 +78,8 @@ public class ExpenseMainActivity extends AppCompatActivity implements ExpenseTim
     }
 
     @Override
-    public void onFragmentInteraction(Uri uri) {
-
+    public void onFragmentChange(Integer section) {
+        mViewPager.setCurrentItem(section);
     }
 
     @Override
@@ -116,7 +116,7 @@ public class ExpenseMainActivity extends AppCompatActivity implements ExpenseTim
                     return books;
                 case 1:
                     if (timelineFragment == null) {
-                        timelineFragment = new cheng.yunhan.scanner_v1.ExpenseTimelineFragment();
+                        timelineFragment = ExpenseTimelineFragment.newInstance();
                     }
                     return timelineFragment ;
                 case 2:

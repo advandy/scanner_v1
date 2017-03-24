@@ -3,22 +3,16 @@ package cheng.yunhan.scanner_v1;
 import android.app.Dialog;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.media.Image;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.FileProvider;
 import android.support.v4.view.PagerAdapter;
@@ -26,15 +20,12 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -53,16 +44,12 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.UUID;
+
 
 import static android.app.Activity.RESULT_CANCELED;
 import static android.app.Activity.RESULT_OK;
@@ -81,10 +68,7 @@ public class ExpenseTimelineFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
     static final int DISPLAY_DAILY_EXPENSE = 1;
-    static final int REQUEST_IMAGE_CAPTURE = 2;
     static final int REQUEST_SCAN = 3;
-
-    private File imageFile;
 
     private DAO DAOUtils;
 
@@ -127,17 +111,12 @@ public class ExpenseTimelineFragment extends Fragment {
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
      * @return A new instance of fragment ExpenseTimelineFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static ExpenseTimelineFragment newInstance(String param1, String param2) {
+    public static ExpenseTimelineFragment newInstance() {
         ExpenseTimelineFragment fragment = new ExpenseTimelineFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
+
         return fragment;
     }
 
@@ -161,44 +140,9 @@ public class ExpenseTimelineFragment extends Fragment {
                 new QueryMonthlyRecords().execute();
             }
         }
-
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-
-            CropImage.activity(Uri.fromFile(imageFile))
-                    .setGuidelines(CropImageView.Guidelines.ON)
-                    .start(mainActivity);
-        } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_CANCELED) {
-            imageFile.delete();
-        }
-
-        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
-            CropImage.ActivityResult result = CropImage.getActivityResult(data);
-            if (resultCode == RESULT_OK) {
-                Intent toDetailIntent = new Intent(getContext(), OcrDetailActivity.class);
-                toDetailIntent.putExtra("imagePath", result.getUri().getPath());
-                startActivity(toDetailIntent);
-
-                //MainActivity.ImageDocument imageDocument = new MainActivity.ImageDocument(null, null, null);
-                //imageDocument.timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-                Bitmap image = decodeSampledBitmapFromFile(result.getUri().getPath(),1000, 1000);
-                //imageDocument.imagePath = result.getUri().getPath();
-                OutputStream outStream = null;
-                try {
-                    outStream = new FileOutputStream(imageFile);
-                    image.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
-                    outStream.flush();
-                    outStream.close();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
-                Exception error = result.getError();
-            } else if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE && resultCode == RESULT_CANCELED) {
-                imageFile.delete();
-            }
+        
+        if (requestCode == REQUEST_SCAN) {
+            // TODO: 24.03.2017
         }
     }
 
@@ -220,11 +164,27 @@ public class ExpenseTimelineFragment extends Fragment {
         monthlyExpenseTv = (TextView) rootView.findViewById(R.id.monthlyExpenseSum);
         monthlyIncomeTv = (TextView) rootView.findViewById(R.id.monthlyIncomeSum);
 
+        ImageButton tile = (ImageButton) rootView.findViewById(R.id.tile);
+        tile.setOnClickListener(new ImageButton.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mListener.onFragmentChange(0);
+            }
+        });
+
+        ImageButton report = (ImageButton) rootView.findViewById(R.id.report);
+        report.setOnClickListener(new ImageButton.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mListener.onFragmentChange(2);
+            }
+        });
+
         ImageButton fab = (ImageButton)rootView.findViewById(R.id.addExpense);
         fab.setOnClickListener(new ImageButton.OnClickListener() {
             @Override
             public void onClick(View view) {
-/*                DAOUtils.addExpenseItem("REWE", "Coca Cola", "Drink", 1.99, 19, 3, 2017);
+                DAOUtils.addExpenseItem("REWE", "Coca Cola", "Drink", 1.99, 19, 3, 2017);
                 DAOUtils.addExpenseItem("REWE", "Coca Cola 1", "Drink", 1.99, 19, 3, 2017);
 
                 DAOUtils.addExpenseItem("LIDL", "Coca Cola 1", "Drink", 1.99, 19, 3, 2017);
@@ -232,11 +192,11 @@ public class ExpenseTimelineFragment extends Fragment {
 
                 DAOUtils.addIncomeItem("Salary", 1000.00, 1,3,2017);
 
-                DAOUtils.addExpenseItem("REWE", "Coca Cola 2", "Drink", 1.99, 18, 3, 2017);
-                DAOUtils.addExpenseItem("REWE", "Coca Cola 3", "Drink", 1.99,  18, 3, 2017);
-                DAOUtils.addExpenseItem("REWE", "Coca Cola 4", "Drink", 1.99, 18, 3, 2017);
+                DAOUtils.addExpenseItem("ALDI", "Coca Cola 2", "Drink", 1.99, 18, 3, 2017);
+                DAOUtils.addExpenseItem("ALDI", "Coca Cola 3", "Drink", 1.99,  18, 3, 2017);
+                DAOUtils.addExpenseItem("ALDI", "Coca Cola 4", "Drink", 1.99, 18, 3, 2017);
 
-                new QueryMonthlyRecords().execute("Book");*/
+                new QueryMonthlyRecords().execute("Book");
 
                 final Dialog dialog = new Dialog(getContext());
                 dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -365,31 +325,7 @@ public class ExpenseTimelineFragment extends Fragment {
         // Save a file: path for use with ACTION_VIEW intents
         return image;
     }
-    private void takePhoto() {
-        File file = null;
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getContext().getPackageManager()) != null) {
-            //file = new File(Environment.getExternalStorageDirectory()+File.separator + "temp_image_scanner.jpg");
-            try {
-                file = createImageFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
 
-            if (file != null) {
-                if (Build.VERSION.SDK_INT >= 24) {
-                    Uri photoURI = FileProvider.getUriForFile(getContext(),
-                            "cheng.yunhan.scanner_v1.provider",
-                            file);
-                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-                } else {
-                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file));
-                }
-                imageFile = file;
-                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-            }
-        }
-    }
 
     private class QueryMonthlyRecords extends AsyncTask<String, Void, Void> {
 
@@ -612,6 +548,23 @@ public class ExpenseTimelineFragment extends Fragment {
             }
         }
 
+        private Map<String, Integer> map = new HashMap<String, Integer>(){
+            {
+                put("REWE", R.drawable.rewe);
+                //put("ALDI", R.drawable.pig);
+                put("LIDL", R.drawable.lidl);
+                put("DM", R.drawable.dm);
+            }
+        };
+
+        private int getIconImage(String shop) {
+            Integer icon = map.get(shop);
+            if (icon != null) {
+                return icon;
+            }
+
+            return R.drawable.savepig;
+        }
 
         @Override
         public TimelineAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -652,7 +605,12 @@ public class ExpenseTimelineFragment extends Fragment {
                 dateViewHolder.dateSum.setText(((DateItem)item).sum + "");
             } else if (item instanceof ExpenseItem) {
                 ExpenseViewHolder expenseViewHolder = (ExpenseViewHolder)holder;
-                expenseViewHolder.expense.setText(((ExpenseItem) item).contentValues.getAsString(DAO.ItemEntry.COLUMN_NAME_SHOP) + " " + (((ExpenseItem) item).contentValues.getAsString(DAO.ItemEntry.COLUMN_NAME_SUM)));
+                String shop = ((ExpenseItem) item).contentValues.getAsString(DAO.ItemEntry.COLUMN_NAME_SHOP);
+                String sum = (((ExpenseItem) item).contentValues.getAsString(DAO.ItemEntry.COLUMN_NAME_SUM));
+                expenseViewHolder.expense.setText( shop + " " + sum);
+
+                //expenseViewHolder.icon.setImageResource(map.get(shop));
+                expenseViewHolder.icon.setBackgroundResource(getIconImage(shop));
                 expenseViewHolder.icon.setOnClickListener(new ImageButton.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -681,39 +639,6 @@ public class ExpenseTimelineFragment extends Fragment {
         }
     }
 
-    public static Bitmap decodeSampledBitmapFromFile(String path, int reqWidth, int reqHeight)
-    { // BEST QUALITY MATCH
-
-        //First decode with inJustDecodeBounds=true to check dimensions
-        final BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(path, options);
-
-        // Calculate inSampleSize, Raw height and width of image
-        final int height = options.outHeight;
-        final int width = options.outWidth;
-        options.inPreferredConfig = Bitmap.Config.RGB_565;
-        int inSampleSize = 1;
-
-        if (height > reqHeight)
-        {
-            inSampleSize = Math.round((float)height / (float)reqHeight);
-        }
-        int expectedWidth = width / inSampleSize;
-
-        if (expectedWidth > reqWidth)
-        {
-            //if(Math.round((float)width / (float)reqWidth) > inSampleSize) // If bigger SampSize..
-            inSampleSize = Math.round((float)width / (float)reqWidth);
-        }
-
-        options.inSampleSize = inSampleSize;
-
-        // Decode bitmap with inSampleSize set
-        options.inJustDecodeBounds = false;
-
-        return BitmapFactory.decodeFile(path, options);
-    }
 
 
     @Override
@@ -745,6 +670,6 @@ public class ExpenseTimelineFragment extends Fragment {
      */
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+        void onFragmentChange(Integer section);
     }
 }

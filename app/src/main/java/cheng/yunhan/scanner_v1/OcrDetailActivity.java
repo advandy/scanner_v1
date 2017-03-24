@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.OrientationHelper;
@@ -40,8 +41,23 @@ public class OcrDetailActivity extends AppCompatActivity {
     private String imagePath;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(R.style.CustomTheme);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ocr_detail);
+
+        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+        getSupportActionBar().setDisplayShowCustomEnabled(true);
+        getSupportActionBar().setCustomView(R.layout.actionbar);
+
+        View actionBar = getSupportActionBar().getCustomView();
+        Button cancel = (Button) actionBar.findViewById(R.id.cancel);
+        cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+
         Intent intent = getIntent();
         imagePath = intent.getStringExtra("imagePath");
         ImageView im = (ImageView)findViewById(R.id.imageView2);
@@ -62,6 +78,7 @@ public class OcrDetailActivity extends AppCompatActivity {
         });
 
         pb = (ProgressBar) findViewById(R.id.progressBar);
+
 
     }
 
