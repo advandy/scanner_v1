@@ -2,14 +2,17 @@ package cheng.yunhan.butler;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -26,6 +29,16 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Date;
+
+import cz.msebera.android.httpclient.HttpEntity;
+import cz.msebera.android.httpclient.HttpResponse;
+import cz.msebera.android.httpclient.client.HttpClient;
+import cz.msebera.android.httpclient.client.methods.HttpPost;
+import cz.msebera.android.httpclient.entity.mime.HttpMultipartMode;
+import cz.msebera.android.httpclient.entity.mime.MultipartEntityBuilder;
+import cz.msebera.android.httpclient.entity.mime.content.FileBody;
+import cz.msebera.android.httpclient.impl.client.HttpClientBuilder;
+import cz.msebera.android.httpclient.util.EntityUtils;
 
 public class OcrDetailActivity extends AppCompatActivity {
     final Context context = this;
@@ -161,34 +174,55 @@ public class OcrDetailActivity extends AppCompatActivity {
 
         @Override
         protected String doInBackground(Void... params) {
+            HttpClientBuilder builder= HttpClientBuilder.create();
+            HttpClient httpClient = builder.build();
+            HttpPost httppost = new HttpPost("http://192.168.0.10:8088/AndroidFileUpload/fileUpload.php");
 
-            Thread thread = new Thread();
+            File imageFile = new File(imagePath);
+
+            MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
+            multipartEntityBuilder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+            multipartEntityBuilder.addPart("image", new FileBody(imageFile));
+            HttpEntity entity = multipartEntityBuilder.build();
+            httppost.setEntity(entity);
+            String responseString = "";
             try {
-                return processOCR(imagePath, (new Date()).getTime() + "Some random words");
-            } catch (FileNotFoundException e) {
+                HttpResponse response = httpClient.execute(httppost);
+                HttpEntity responseEntity = response.getEntity();
+                int statusCode = response.getStatusLine().getStatusCode();;
+                if (statusCode == 200) {
+                    // Server response
+                    responseString = EntityUtils.toString(responseEntity);
+                } else {
+                    responseString = "Error occurred! Http Status Code: "
+                            + statusCode;
+                }
+                Log.i("", String.valueOf(responseString));
+            } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            return "";
+            return responseString;
         }
 
         @Override
         protected void onPostExecute(String result ) {
             //super.onPostExecute(aVoid);
-
-            if (!active) {
-                return;
-            }
-
-            //showOCRResult(result);
-
-            pb.setVisibility(View.INVISIBLE);
-
-            Intent intent = new Intent();
-            intent.putExtra("data", "data");
-            setResult(RESULT_OK, intent);
-            finish();
+            showAlert(result);
         }
+    }
+
+    private void showAlert(String message) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(message).setTitle("Response from Servers")
+                .setCancelable(false)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        // do nothing
+                    }
+                });
+        AlertDialog alert = builder.create();
+        alert.show();
     }
 
     public static Bitmap decodeSampledBitmapFromFile(String path, int reqWidth, int reqHeight)
