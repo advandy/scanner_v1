@@ -1,11 +1,6 @@
-package cheng.yunhan.scanner_v1;
+package cheng.yunhan.butler;
 
-import android.content.Context;
-import android.net.Uri;
-import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;

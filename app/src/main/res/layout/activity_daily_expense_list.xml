@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="cheng.yunhan.scanner_v1.DailyExpenseList">
+    tools:context="cheng.yunhan.butler.DailyExpenseList">
 
     <ListView
         android:id="@+id/dailyShoppingListView"

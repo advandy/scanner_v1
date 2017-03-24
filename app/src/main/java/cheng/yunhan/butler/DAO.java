@@ -1,4 +1,4 @@
-package cheng.yunhan.scanner_v1;
+package cheng.yunhan.butler;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -7,10 +7,8 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
-import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by rabbitsong on 19/03/17.

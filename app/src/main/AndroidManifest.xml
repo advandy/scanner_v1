@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="cheng.yunhan.scanner_v1">
+    package="cheng.yunhan.butler">
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -11,14 +11,14 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/butler_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/butler_launcher"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <provider
             android:name="android.support.v4.content.FileProvider"
-            android:authorities="cheng.yunhan.scanner_v1.provider"
+            android:authorities="cheng.yunhan.butler.provider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
@@ -27,8 +27,7 @@
         </provider>
 
         <activity
-            android:name=".ExpenseMainActivity"
-            android:label="@string/title_activity_expense_main"
+            android:name="cheng.yunhan.butler.ExpenseMainActivity"
             android:launchMode="singleTop"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -38,9 +37,9 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name="cheng.yunhan.butler.MainActivity"
             android:launchMode="singleTop"
-            android:parentActivityName=".ExpenseMainActivity">
+            android:parentActivityName="cheng.yunhan.butler.ExpenseMainActivity">
 
             <!--
             <intent-filter>
@@ -54,17 +53,17 @@
             android:name="com.theartofdev.edmodo.cropper.CropImageActivity"
             android:theme="@style/Base.Theme.AppCompat" /> <!-- optional (needed if default theme has no action bar) -->
         <activity
-            android:name=".OcrDetailActivity"
-            android:parentActivityName=".MainActivity">
+            android:name="cheng.yunhan.butler.OcrDetailActivity"
+            android:parentActivityName="cheng.yunhan.butler.MainActivity">
 
             <!-- The meta-data tag is required if you support API level 15 and lower -->
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
+                android:value="cheng.yunhan.butler.MainActivity" />
         </activity>
-        <activity android:name=".ExpenseDetailActivity" />
-        <activity android:name=".DailyExpenseList" />
-        <activity android:name=".takePhotoActivity"></activity>
+        <activity android:name="cheng.yunhan.butler.ExpenseDetailActivity" />
+        <activity android:name="cheng.yunhan.butler.DailyExpenseList" />
+        <activity android:name="cheng.yunhan.butler.takePhotoActivity"></activity>
     </application>
 
 </manifest>

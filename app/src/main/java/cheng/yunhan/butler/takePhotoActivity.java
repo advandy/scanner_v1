@@ -1,9 +1,10 @@
-package cheng.yunhan.scanner_v1;
+package cheng.yunhan.butler;
 
 import android.app.Activity;
-import android.app.Dialog;
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ProviderInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -12,8 +13,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
-import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
@@ -25,8 +24,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import static java.security.AccessController.getContext;
 
 public class takePhotoActivity extends Activity {
 
@@ -133,7 +130,7 @@ public class takePhotoActivity extends Activity {
             if (file != null) {
                 if (Build.VERSION.SDK_INT >= 24) {
                     Uri photoURI = FileProvider.getUriForFile(this,
-                            "cheng.yunhan.scanner_v1.provider",
+                            "cheng.yunhan.butler.provider",
                             file);
                     takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 } else {
