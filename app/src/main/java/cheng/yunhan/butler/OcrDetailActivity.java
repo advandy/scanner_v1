@@ -50,18 +50,6 @@ public class OcrDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ocr_detail);
 
-        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
-        getSupportActionBar().setDisplayShowCustomEnabled(true);
-        getSupportActionBar().setCustomView(R.layout.actionbar);
-
-        View actionBar = getSupportActionBar().getCustomView();
-        Button cancel = (Button) actionBar.findViewById(R.id.cancel);
-        cancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
 
         Intent intent = getIntent();
         imagePath = intent.getStringExtra("imagePath");
@@ -176,13 +164,14 @@ public class OcrDetailActivity extends AppCompatActivity {
         protected String doInBackground(Void... params) {
             HttpClientBuilder builder= HttpClientBuilder.create();
             HttpClient httpClient = builder.build();
-            HttpPost httppost = new HttpPost("http://192.168.0.10:8088/AndroidFileUpload/fileUpload.php");
-
+            HttpPost httppost = new HttpPost("http://47.92.27.34:8080/ocr_processor/test/");
+            //HttpPost httppost = new HttpPost("http://192.168.0.0:8080/fake/test/");
             File imageFile = new File(imagePath);
 
             MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
             multipartEntityBuilder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-            multipartEntityBuilder.addPart("image", new FileBody(imageFile));
+            multipartEntityBuilder.addPart("picFile", new FileBody(imageFile));
+            multipartEntityBuilder.addTextBody("superMarket", "DM");
             HttpEntity entity = multipartEntityBuilder.build();
             httppost.setEntity(entity);
             String responseString = "";
