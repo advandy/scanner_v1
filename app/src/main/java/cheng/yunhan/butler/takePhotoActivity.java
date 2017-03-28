@@ -48,9 +48,13 @@ public class takePhotoActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
 
-            CropImage.activity(Uri.fromFile(imageFile))
+            Intent intent = new Intent(takePhotoActivity.this, CropImageActivity.class);
+            intent.putExtra("imageUri", Uri.fromFile(imageFile).getPath());
+
+            startActivity(intent);
+            /*CropImage.activity(Uri.fromFile(imageFile))
                     .setGuidelines(CropImageView.Guidelines.ON)
-                    .start(this);
+                    .start(this);*/
         } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_CANCELED) {
             imageFile.delete();
             backToTimeline();

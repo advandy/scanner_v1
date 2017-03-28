@@ -28,7 +28,7 @@
         </provider>
 
         <activity
-            android:name="cheng.yunhan.butler.ExpenseMainActivity"
+            android:name=".ExpenseMainActivity"
             android:launchMode="singleTop"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -38,9 +38,9 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="cheng.yunhan.butler.MainActivity"
+            android:name=".MainActivity"
             android:launchMode="singleTop"
-            android:parentActivityName="cheng.yunhan.butler.ExpenseMainActivity">
+            android:parentActivityName=".ExpenseMainActivity">
 
             <!--
             <intent-filter>
@@ -54,17 +54,18 @@
             android:name="com.theartofdev.edmodo.cropper.CropImageActivity"
             android:theme="@style/Base.Theme.AppCompat" /> <!-- optional (needed if default theme has no action bar) -->
         <activity
-            android:name="cheng.yunhan.butler.OcrDetailActivity"
-            android:parentActivityName="cheng.yunhan.butler.MainActivity">
+            android:name=".OcrDetailActivity"
+            android:parentActivityName=".MainActivity">
 
             <!-- The meta-data tag is required if you support API level 15 and lower -->
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="cheng.yunhan.butler.MainActivity" />
         </activity>
-        <activity android:name="cheng.yunhan.butler.ExpenseDetailActivity" />
-        <activity android:name="cheng.yunhan.butler.DailyExpenseList" />
-        <activity android:name="cheng.yunhan.butler.takePhotoActivity"></activity>
+        <activity android:name=".ExpenseDetailActivity" />
+        <activity android:name=".DailyExpenseList" />
+        <activity android:name=".takePhotoActivity" />
+        <activity android:name=".CropImageActivity"></activity>
     </application>
 
 </manifest>

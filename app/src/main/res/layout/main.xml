@@ -4,23 +4,32 @@
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="match_parent">
-    <LinearLayout android:layout_width="fill_parent" android:layout_height="40dp"
-        android:background="@android:color/white">
 
-    </LinearLayout>
+    <Button
+        android:id="@+id/button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Button" />
+
     <ImageView android:layout_width="wrap_content" android:layout_height="100dp"
                android:id="@+id/layout2_imageAbove"
-               android:src="@drawable/correct"
                android:scaleType="matrix"
                android:background="@android:color/holo_red_light"
             />
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="10dp"
+        android:background="@android:color/white">
+
+    </LinearLayout>
+
     <FrameLayout
                  android:orientation="vertical"
                  android:layout_width="match_parent"
                  android:layout_height="match_parent"
             android:background="@android:color/black">
         <cheng.yunhan.butler.customview.BottomImageView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                   android:src="@drawable/correct"
                    android:background="@android:color/black"
                    android:id="@+id/layout2_bottomView"
                    android:layout_gravity="center_horizontal"
@@ -31,12 +40,6 @@
                                                    android:adjustViewBounds="true"
                                                    android:layout_gravity="center_horizontal"
                 />
-
-        <Button
-            android:id="@+id/button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Button" />
 
     </FrameLayout>
 </LinearLayout>

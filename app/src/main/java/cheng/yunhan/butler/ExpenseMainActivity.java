@@ -56,79 +56,8 @@ public class ExpenseMainActivity extends AppCompatActivity implements ExpenseTim
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        /*super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        setContentView(R.layout.main);
-
-
-        final BottomImageView bottomImageView = (BottomImageView)findViewById(R.id.layout2_bottomView);
-        bottomImageView.setDrawingCacheEnabled(true);
-        ImageView zoomArea = (ImageView)findViewById(R.id.layout2_imageAbove);
-        final ChooseArea chooseArea = (ChooseArea)findViewById(R.id.layout2_topView);
-
-        bottomImageView.setZoomView(zoomArea);
-        chooseArea.setBottomView(bottomImageView);
-
-        int width = 500;
-        int height = 500;
-
-        chooseArea.setRegion(new Point(100, 100), new Point(width - 100, 100), new Point(width - 100, height - 100), new Point(100, height - 100));
-
-        Button btn = (Button) findViewById(R.id.button);
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Bitmap bitmap1= bottomImageView.getDrawingCache();
-                Bitmap bitmap2= bottomImageView.getDrawingCache();
-
-                Point[] points = chooseArea.getPoints();
-
-                int width = bottomImageView.getWidth();
-
-                int height = bottomImageView.getHeight();
-
-                Bitmap resultingImage=Bitmap.createBitmap(width, height, bitmap1.getConfig());
-
-                Canvas canvas = new Canvas(resultingImage);
-
-                Paint paint = new Paint();
-                paint.setAntiAlias(true);
-                Path path=new Path();
-                path.moveTo(points[0].x, points[0].y);
-                path.lineTo(points[1].x, points[1].y);
-                path.lineTo(points[2].x, points[2].y);
-                path.lineTo(points[3].x, points[3].y);
-                path.lineTo(points[0].x, points[0].y);
-
-                canvas.drawPath(path, paint);
-
-                paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
-                canvas.drawBitmap(bitmap2, 0, 0, paint);
-
-                bottomImageView.setImageBitmap(resultingImage);
-
-                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-                String imageFileName = "JPEG_" + timeStamp + "_";
-                File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-
-                try {
-                    File image = File.createTempFile(
-                            imageFileName,  *//* prefix *//*
-                            ".jpg",         *//* suffix *//*
-                            storageDir      *//* directory *//*
-                    );
-
-                    OutputStream outStream = new FileOutputStream(image);
-                    resultingImage.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
-                    outStream.flush();
-                    outStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });*/
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_expense_main);
 
         //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
