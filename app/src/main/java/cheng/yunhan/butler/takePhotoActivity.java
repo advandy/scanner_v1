@@ -29,6 +29,7 @@ public class takePhotoActivity extends Activity {
 
     public static final int REQUEST_IMAGE_CAPTURE = 1;
     public static final int REQUEST_OCR = 2;
+    public static final int REQUEST_IMAGE_CROP = 3;
     File imageFile;
 
     @Override

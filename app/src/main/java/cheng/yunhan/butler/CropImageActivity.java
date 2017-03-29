@@ -30,14 +30,16 @@ import cheng.yunhan.butler.customview.ChooseArea;
 
 public class CropImageActivity extends AppCompatActivity {
 
+    private String imagePath;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         Intent intent = getIntent();
-        String uriString = intent.getStringExtra("imageUri");
+        imagePath = intent.getStringExtra("imageUri");
 
-        final Bitmap image = BitmapFactory.decodeFile(uriString);
+        final Bitmap image = BitmapFactory.decodeFile(imagePath);
 
         final int originWidth = image.getWidth();
         final int originHeight = image.getHeight();
@@ -102,32 +104,44 @@ public class CropImageActivity extends AppCompatActivity {
                 paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
                 canvas.drawBitmap(bitmap2, 0, 0, paint);
 
-
-
-                resultingImage = Bitmap.createBitmap(resultingImage, points[0].x*xFactor.intValue(), points[0].y*yFactor.intValue(), points[1].x*xFactor.intValue() - points[0].x*xFactor.intValue(), points[3].y*yFactor.intValue() - points[0].y*yFactor.intValue() );
-
-                bottomImageView.setImageBitmap(resultingImage);
-
-                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-                String imageFileName = "JPEG_" + timeStamp + "_";
-                File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-
+                //resultingImage = Bitmap.createBitmap(resultingImage, points[0].x*xFactor.intValue(), points[0].y*yFactor.intValue(), points[1].x*xFactor.intValue() - points[0].x*xFactor.intValue(), points[3].y*yFactor.intValue() - points[0].y*yFactor.intValue() );
+                resultingImage = getRectImage(points, xFactor, yFactor, resultingImage);
                 try {
-                    File image = File.createTempFile(
-                            imageFileName,
-                            ".jpg",
-                            storageDir
-                    );
-
+                    File image = new File(imagePath);
                     OutputStream outStream = new FileOutputStream(image);
-                    resultingImage.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+                    resultingImage.compress(Bitmap.CompressFormat.JPEG, 80, outStream);
                     outStream.flush();
                     outStream.close();
+                    Intent intent = new Intent(CropImageActivity.this, OcrDetailActivity.class);
+                    intent.putExtra("imagePath", imagePath);
+                    startActivity(intent);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         });
+    }
+
+    private Bitmap getRectImage(Point[] points, Float xFactor, Float yFactor, Bitmap image) {
+
+        int witdth= image.getWidth();
+        int height = image.getHeight();
+
+        int x = points[0].x < points[3].x ? points[0].x : points[3].x;
+        int y = points[0].y > points[1].y ? points[0].y :  points[1].y;
+
+        int leftx = x;
+        int rightx = points[1].x > points[2].x ? points[1].x : points[2].x;
+
+        int topy = y;
+        int bottomy = points[2].y > points[3].y ? points[2].y : points[3].y;
+
+        int xAxis = Math.round(x*xFactor);
+        int yAxis = Math.round(y*yFactor.intValue());
+        int picWidth = Math.round(rightx*xFactor - leftx*xFactor);
+        int picHeight = Math.round(bottomy*yFactor- topy*yFactor);
+
+        return Bitmap.createBitmap(image, xAxis, yAxis, picWidth, picHeight);
     }
 
     public static Bitmap decodeSampledBitmapFromFile(String path, int reqWidth, int reqHeight)
