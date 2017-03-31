@@ -17,6 +17,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -34,6 +35,7 @@ public class CropImageActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(R.style.AppTheme_NoActionBar);
         super.onCreate(savedInstanceState);
 
         Intent intent = getIntent();
@@ -55,6 +57,8 @@ public class CropImageActivity extends AppCompatActivity {
         bottomImageView.setImageBitmap(image);
         ImageView zoomArea = (ImageView)findViewById(R.id.layout2_imageAbove);
         zoomArea.setImageBitmap(image);
+        zoomArea.buildDrawingCache();
+
         final ChooseArea chooseArea = (ChooseArea)findViewById(R.id.layout2_topView);
 
         bottomImageView.setZoomView(zoomArea);
@@ -65,17 +69,29 @@ public class CropImageActivity extends AppCompatActivity {
 
         chooseArea.setRegion(new Point(100, 100), new Point(width - 100, 100), new Point(width - 100, height - 100), new Point(100, height - 100));
 
+        Button wholePicBtn = (Button) findViewById(R.id.button3);
+        wholePicBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int height = bottomImageView.getHeight();
+                int width = bottomImageView.getWidth();
+                chooseArea.setRegion(new Point(0, 0), new Point(width, 0), new Point(width, height), new Point(0, height));
+                chooseArea.invalidate();
+            }
+        });
+
         Button btn = (Button) findViewById(R.id.button);
+        final ProgressBar pb = (ProgressBar) findViewById(R.id.cropProgress);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                pb.setVisibility(View.VISIBLE);
                 int imageViewHeight = bottomImageView.getHeight();
 
                 int imageViewWidth = bottomImageView.getWidth();
 
                 Bitmap bitmap1= image;
-                Bitmap bitmap2= bitmap1.copy(bitmap1.getConfig(), false);
+                //Bitmap bitmap2= bitmap1.copy(bitmap1.getConfig(), false);
 
                 Point[] points = chooseArea.getPoints();
 
@@ -102,7 +118,7 @@ public class CropImageActivity extends AppCompatActivity {
                 canvas.drawPath(path, paint);
 
                 paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
-                canvas.drawBitmap(bitmap2, 0, 0, paint);
+                canvas.drawBitmap(bitmap1, 0, 0, paint);
 
                 //resultingImage = Bitmap.createBitmap(resultingImage, points[0].x*xFactor.intValue(), points[0].y*yFactor.intValue(), points[1].x*xFactor.intValue() - points[0].x*xFactor.intValue(), points[3].y*yFactor.intValue() - points[0].y*yFactor.intValue() );
                 resultingImage = getRectImage(points, xFactor, yFactor, resultingImage);
@@ -112,6 +128,7 @@ public class CropImageActivity extends AppCompatActivity {
                     resultingImage.compress(Bitmap.CompressFormat.JPEG, 80, outStream);
                     outStream.flush();
                     outStream.close();
+                    pb.setVisibility(View.INVISIBLE);
                     Intent intent = new Intent(CropImageActivity.this, OcrDetailActivity.class);
                     intent.putExtra("imagePath", imagePath);
                     startActivity(intent);
@@ -122,13 +139,19 @@ public class CropImageActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(CropImageActivity.this, ExpenseMainActivity.class);
+        startActivity(intent);
+    }
+
     private Bitmap getRectImage(Point[] points, Float xFactor, Float yFactor, Bitmap image) {
 
         int witdth= image.getWidth();
         int height = image.getHeight();
 
         int x = points[0].x < points[3].x ? points[0].x : points[3].x;
-        int y = points[0].y > points[1].y ? points[0].y :  points[1].y;
+        int y = points[0].y < points[1].y ? points[0].y :  points[1].y;
 
         int leftx = x;
         int rightx = points[1].x > points[2].x ? points[1].x : points[2].x;
@@ -137,44 +160,10 @@ public class CropImageActivity extends AppCompatActivity {
         int bottomy = points[2].y > points[3].y ? points[2].y : points[3].y;
 
         int xAxis = Math.round(x*xFactor);
-        int yAxis = Math.round(y*yFactor.intValue());
+        int yAxis = Math.round(y*yFactor);
         int picWidth = Math.round(rightx*xFactor - leftx*xFactor);
         int picHeight = Math.round(bottomy*yFactor- topy*yFactor);
 
         return Bitmap.createBitmap(image, xAxis, yAxis, picWidth, picHeight);
-    }
-
-    public static Bitmap decodeSampledBitmapFromFile(String path, int reqWidth, int reqHeight)
-    { // BEST QUALITY MATCH
-
-        //First decode with inJustDecodeBounds=true to check dimensions
-        final BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(path, options);
-
-        // Calculate inSampleSize, Raw height and width of image
-        final int height = options.outHeight;
-        final int width = options.outWidth;
-        options.inPreferredConfig = Bitmap.Config.RGB_565;
-        int inSampleSize = 1;
-
-        if (height > reqHeight)
-        {
-            inSampleSize = Math.round((float)height / (float)reqHeight);
-        }
-        int expectedWidth = width / inSampleSize;
-
-        if (expectedWidth > reqWidth)
-        {
-            //if(Math.round((float)width / (float)reqWidth) > inSampleSize) // If bigger SampSize..
-            inSampleSize = Math.round((float)width / (float)reqWidth);
-        }
-
-        options.inSampleSize = inSampleSize;
-
-        // Decode bitmap with inSampleSize set
-        options.inJustDecodeBounds = false;
-
-        return BitmapFactory.decodeFile(path, options);
     }
 }

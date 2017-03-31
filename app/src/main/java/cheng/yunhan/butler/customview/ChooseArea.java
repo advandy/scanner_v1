@@ -140,7 +140,7 @@ public class ChooseArea extends View {
         flag &= calculateAngle(edge2, edge3, diagonal2);
         flag &= calculateAngle(edge3, edge4, diagonal1);
         if (!flag) {
-            Toast.makeText(_context, "无法裁剪", Toast.LENGTH_SHORT).show();
+            Toast.makeText(_context, "can't crop", Toast.LENGTH_SHORT).show();
             // TODO : 当然这里还可以对全透明区的边框进行变色
         }
     }

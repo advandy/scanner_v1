@@ -45,6 +45,7 @@ public class takePhotoActivity extends Activity {
         finish();
     }
 
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {

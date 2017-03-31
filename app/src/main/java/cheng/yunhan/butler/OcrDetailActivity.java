@@ -1,6 +1,7 @@
 package cheng.yunhan.butler;
 
 import android.app.Dialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -20,6 +21,10 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -28,12 +33,15 @@ import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 
 import cz.msebera.android.httpclient.HttpEntity;
 import cz.msebera.android.httpclient.HttpResponse;
 import cz.msebera.android.httpclient.client.HttpClient;
 import cz.msebera.android.httpclient.client.methods.HttpPost;
+import cz.msebera.android.httpclient.concurrent.Cancellable;
 import cz.msebera.android.httpclient.entity.mime.HttpMultipartMode;
 import cz.msebera.android.httpclient.entity.mime.MultipartEntityBuilder;
 import cz.msebera.android.httpclient.entity.mime.content.FileBody;
@@ -44,12 +52,16 @@ public class OcrDetailActivity extends AppCompatActivity {
     final Context context = this;
     private ProgressBar pb;
     private String imagePath;
+    private int day, month, year;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(R.style.CustomTheme);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ocr_detail);
-
+        Calendar calendar = Calendar.getInstance();
+        day = calendar.get(Calendar.DAY_OF_MONTH);
+        month = calendar.get(Calendar.MONTH) + 1;
+        year = calendar.get(Calendar.YEAR);
 
         Intent intent = getIntent();
         imagePath = intent.getStringExtra("imagePath");
@@ -64,7 +76,7 @@ public class OcrDetailActivity extends AppCompatActivity {
                 active = true;
                 Context context = OcrDetailActivity.this;
                 int duration = Toast.LENGTH_SHORT;
-                Toast toast = Toast.makeText(context, "Upload Image and process OCR", duration);
+                Toast toast = Toast.makeText(context, "OCR process in the background", duration);
                 toast.show();
                 new ProcessOnlineOCR().execute();
             }
@@ -175,9 +187,10 @@ public class OcrDetailActivity extends AppCompatActivity {
             HttpEntity entity = multipartEntityBuilder.build();
             httppost.setEntity(entity);
             String responseString = "";
+            HttpEntity responseEntity = null;
             try {
                 HttpResponse response = httpClient.execute(httppost);
-                HttpEntity responseEntity = response.getEntity();
+                responseEntity = response.getEntity();
                 int statusCode = response.getStatusLine().getStatusCode();;
                 if (statusCode == 200) {
                     // Server response
@@ -197,7 +210,37 @@ public class OcrDetailActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String result ) {
             //super.onPostExecute(aVoid);
-            showAlert(result);
+            try {
+                ArrayList<ContentValues> shoppinglist = new ArrayList<>();
+                JSONObject json = new JSONObject(result); //Convert String to JSON Object
+
+                JSONObject resp = json.getJSONObject("result");
+                JSONArray items = resp.getJSONArray("items");
+                for (int i = 0; i < items.length(); i ++) {
+                    JSONObject item = items.getJSONObject(0);
+                    String article = item.getString("name");
+                    Double sum = item.getDouble("price");
+                    int count = item.getInt("count");
+                    ContentValues value = new ContentValues();
+                    value.put(DAO.ItemEntry.COLUMN_NAME_COUNT, count);
+                    value.put(DAO.ItemEntry.COLUMN_NAME_ARTICLE, article);
+                    value.put(DAO.ItemEntry.COLUMN_NAME_SUM, sum);
+                    value.put(DAO.ItemEntry.COLUMN_NAME_SHOP, "DM");
+                    value.put(DAO.ItemEntry.COLUMN_NAME_DAY, day);
+                    value.put(DAO.ItemEntry.COLUMN_NAME_MONTH, month);
+                    value.put(DAO.ItemEntry.COLUMN_NAME_YEAR, year);
+                    shoppinglist.add(value);
+                }
+
+                Intent intent = new Intent(OcrDetailActivity.this, DailyExpenseList.class);
+                intent.putExtra("day", day);
+                intent.putExtra("month", month);
+                intent.putExtra("shop", "DM");
+                intent.putParcelableArrayListExtra("shoppinglist", shoppinglist);
+                startActivity(intent);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
 

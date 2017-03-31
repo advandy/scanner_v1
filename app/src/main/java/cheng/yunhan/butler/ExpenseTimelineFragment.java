@@ -19,8 +19,10 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.io.File;
@@ -31,6 +33,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -132,6 +135,15 @@ public class ExpenseTimelineFragment extends Fragment {
         }
     }
 
+    private boolean checkEditText(EditText editText) {
+        String str = editText.getText().toString();
+        if (str.matches("")|| str == null) {
+            editText.setError("");
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -170,17 +182,12 @@ public class ExpenseTimelineFragment extends Fragment {
         fab.setOnClickListener(new ImageButton.OnClickListener() {
             @Override
             public void onClick(View view) {
-                DAOUtils.addExpenseItem("REWE", "Coca Cola", "Drink", 1.99, 19, 3, 2017);
-                DAOUtils.addExpenseItem("REWE", "Coca Cola 1", "Drink", 1.99, 19, 3, 2017);
+/*                DAOUtils.addExpenseItem("REWE", "Coca Cola", "Drink",  1, 1.99, 19, 3, 2017);
+                DAOUtils.addExpenseItem("REWE", "Milk", "Drink", 1, 1.99, 19, 3, 2017);
 
-                DAOUtils.addExpenseItem("LIDL", "Coca Cola 1", "Drink", 1.99, 19, 3, 2017);
-                DAOUtils.addExpenseItem("LIDL", "Coca Cola 1", "Drink", 1.99, 19, 3, 2017);
+                DAOUtils.addExpenseItem("LIDL", "Coca Cola", "Drink", 1, 1.99, 19, 3, 2017);
 
-                DAOUtils.addIncomeItem("Salary", 1000.00, 1,3,2017);
-
-                DAOUtils.addExpenseItem("ALDI", "Coca Cola 2", "Drink", 1.99, 18, 3, 2017);
-                DAOUtils.addExpenseItem("ALDI", "Coca Cola 3", "Drink", 1.99,  18, 3, 2017);
-                DAOUtils.addExpenseItem("ALDI", "Coca Cola 4", "Drink", 1.99, 18, 3, 2017);
+                DAOUtils.addExpenseItem("ALDI", "Coca Cola", "Drink", 1, 1.99, 18, 3, 2017);*/
 
                 new QueryMonthlyRecords().execute("Book");
 
@@ -190,6 +197,65 @@ public class ExpenseTimelineFragment extends Fragment {
                 //dialog.setTitle("OCR Result");
                 //((TextView)dialog.findViewById(R.id.ocrTextView)).setText(text);
                 dialog.show();
+
+                final Button manual = (Button) dialog.findViewById(R.id.manuel_input);
+                manual.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                        final Dialog manualDialog = new Dialog(getContext());
+                        manualDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                        manualDialog.setContentView(R.layout.manual_add_item);
+
+                        final EditText article = (EditText) manualDialog.findViewById(R.id.article);
+
+                        final EditText count = (EditText) manualDialog.findViewById(R.id.count);
+
+                        final EditText sum = (EditText) manualDialog.findViewById(R.id.sum);
+
+                        final Spinner spinner = (Spinner) manualDialog.findViewById(R.id.shopSpinner);
+
+                        Button ok = (Button)manualDialog.findViewById(R.id.ok);
+                        ok.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+
+                                boolean error = false;
+
+                                if (checkEditText(article) == true) {
+                                    error = true;
+                                }
+
+                                if (checkEditText(sum) == true) {
+                                    error = true;
+                                }
+
+                                if (checkEditText(count) == true) {
+                                    error = true;
+                                }
+
+                                if (error) {
+                                    return;
+                                }
+
+                                manualDialog.dismiss();
+
+                                String articleStr = String.valueOf(article.getText());
+                                Double sumValue = Double.valueOf(String.valueOf(sum.getText()));
+                                Integer countValue = Integer.valueOf(String.valueOf(count.getText()));
+                                String shop = (String) spinner.getSelectedItem();
+                                int month = Calendar.getInstance().get(Calendar.MONTH) + 1;
+                                int day = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
+                                int year = Calendar.getInstance().get(Calendar.YEAR);
+                                DAOUtils.addExpenseItem(shop, articleStr, "", countValue, sumValue, day, month, year);
+                                new QueryMonthlyRecords().execute("Book");
+                            }
+                        });
+
+
+                        manualDialog.show();
+                    }
+                });
 
                 final Button takePhoto = (Button)dialog.findViewById(R.id.scan_input);
                 takePhoto.setOnClickListener(new Button.OnClickListener() {
@@ -588,7 +654,7 @@ public class ExpenseTimelineFragment extends Fragment {
             if (item instanceof DateItem ) {
                 DateViewHolder dateViewHolder = (DateViewHolder) holder;
                 dateViewHolder.date.setText(((DateItem)item).date);
-                dateViewHolder.dateSum.setText(((DateItem)item).sum + "");
+                dateViewHolder.dateSum.setText(new DecimalFormat("#0.00").format(((DateItem)item).sum));
             } else if (item instanceof ExpenseItem) {
                 ExpenseViewHolder expenseViewHolder = (ExpenseViewHolder)holder;
                 String shop = ((ExpenseItem) item).contentValues.getAsString(DAO.ItemEntry.COLUMN_NAME_SHOP);

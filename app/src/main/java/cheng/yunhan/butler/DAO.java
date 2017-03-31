@@ -64,10 +64,16 @@ public class DAO {
         return db.insert(ItemEntry.TABLE_NAME, null, values);
     }
 
-    public long addExpenseItem(String shop, String article, String category, Double sum, int day, int month, int year) {
+    public void updateExpenseItem(String id, ContentValues values) {
+        String where = ItemEntry._ID + "=" + id;
+        db.update(ItemEntry.TABLE_NAME, values, where, null);
+    }
+
+    public long addExpenseItem(String shop, String article, String category, int count, Double sum, int day, int month, int year) {
         ContentValues values = new ContentValues();
         values.put(ItemEntry.COLUMN_NAME_SHOP, shop);
         values.put(ItemEntry.COLUMN_NAME_ARTICLE, article);
+        values.put(ItemEntry.COLUMN_NAME_COUNT, count);
         values.put(ItemEntry.COLUMN_NAME_CATEGORY, category);
         values.put(ItemEntry.COLUMN_NAME_SUM, sum);
         values.put(ItemEntry.COLUMN_NAME_DAY, day);
@@ -96,6 +102,7 @@ public class DAO {
                 ItemEntry.COLUMN_NAME_INCOMECATEGORY,
                 ItemEntry.COLUMN_NAME_INCOMESUM,
                 "SUM (" + ItemEntry.COLUMN_NAME_SUM + ") AS " + ItemEntry.COLUMN_NAME_SUM,
+                ItemEntry.COLUMN_NAME_COUNT,
                 ItemEntry.COLUMN_NAME_SHOP,
                 ItemEntry.COLUMN_NAME_DAY,
                 ItemEntry.COLUMN_NAME_MONTH,
@@ -146,7 +153,7 @@ public class DAO {
         public static final String COLUMN_NAME_DAY = "day";
         public static final String COLUMN_NAME_MONTH = "month";
         public static final String COLUMN_NAME_YEAR = "year";
-
+        public static final String COLUMN_NAME_COUNT = "count";
     }
 
 
@@ -154,6 +161,7 @@ public class DAO {
             "CREATE TABLE " + ItemEntry.TABLE_NAME + " (" +
                     ItemEntry._ID + " INTEGER PRIMARY KEY," +
                     ItemEntry.COLUMN_NAME_SHOP + " TEXT," +
+                    ItemEntry.COLUMN_NAME_COUNT + " NUMBER," +
                     ItemEntry.COLUMN_NAME_CATEGORY + " TEXT," +
                     ItemEntry.COLUMN_NAME_ARTICLE + " TEXT," +
                     ItemEntry.COLUMN_NAME_DAY + " NUMBER," +
@@ -168,7 +176,7 @@ public class DAO {
 
     public class DBHelper extends SQLiteOpenHelper {
         // If you change the database schema, you must increment the database version.
-        public static final int DATABASE_VERSION = 2;
+        public static final int DATABASE_VERSION = 1;
         public static final String DATABASE_NAME = "Butler.db";
 
         public DBHelper(Context context) {
