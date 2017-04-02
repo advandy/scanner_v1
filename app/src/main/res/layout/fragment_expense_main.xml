@@ -7,7 +7,7 @@
 
     <ImageView
         android:id="@+id/imageView6"
-        android:layout_width="fill_parent"
+        android:layout_width="0dp"
         android:layout_height="160dp"
         android:background="@drawable/travel"
         tools:layout_editor_absoluteX="8dp"
@@ -55,10 +55,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="180dp"
-        android:layout_marginStart="8dp" />
+        android:text="500"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/monthlyExpenseSum"
@@ -72,6 +73,16 @@
         android:layout_marginTop="180dp"
         android:layout_marginEnd="8dp" />
 
+    <include
+        android:id="@+id/input_mode"
+        layout="@layout/input_modes_popup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/addExpense" />
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/timelineRV"
         android:layout_width="0dp"
@@ -84,7 +95,7 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/addExpense"
+        app:layout_constraintTop_toBottomOf="@+id/input_mode"
         app:layout_constraintVertical_bias="0.0">
 
     </android.support.v7.widget.RecyclerView>
@@ -97,7 +108,8 @@
         android:layout_marginTop="8dp"
         android:background="@drawable/tile"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginStart="8dp" />
 
     <ImageButton
         android:id="@+id/report"
@@ -107,6 +119,7 @@
         android:layout_marginTop="8dp"
         android:background="@drawable/report"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginEnd="8dp" />
 
 </android.support.constraint.ConstraintLayout>

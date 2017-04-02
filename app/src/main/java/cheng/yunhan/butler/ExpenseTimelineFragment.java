@@ -13,6 +13,7 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Layout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -58,6 +59,9 @@ public class ExpenseTimelineFragment extends Fragment {
     private static final String ARG_PARAM2 = "param2";
     static final int DISPLAY_DAILY_EXPENSE = 1;
     static final int REQUEST_SCAN = 3;
+
+    private int month;
+    private int year;
 
     private DAO DAOUtils;
 
@@ -135,15 +139,6 @@ public class ExpenseTimelineFragment extends Fragment {
         }
     }
 
-    private boolean checkEditText(EditText editText) {
-        String str = editText.getText().toString();
-        if (str.matches("")|| str == null) {
-            editText.setError("");
-            return true;
-        }
-        return false;
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -161,6 +156,143 @@ public class ExpenseTimelineFragment extends Fragment {
 
         monthlyExpenseTv = (TextView) rootView.findViewById(R.id.monthlyExpenseSum);
         monthlyIncomeTv = (TextView) rootView.findViewById(R.id.monthlyIncomeSum);
+
+        final View inputModeView = (View)rootView.findViewById(R.id.input_mode);
+
+        ImageButton manual = (ImageButton) inputModeView.findViewById(R.id.manuel_input);
+        manual.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                inputModeView.setVisibility(View.GONE);
+                final Dialog manualDialog = new Dialog(getContext());
+                manualDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                manualDialog.setContentView(R.layout.manual_add_item);
+
+                final EditText article = (EditText) manualDialog.findViewById(R.id.article);
+
+                final EditText count = (EditText) manualDialog.findViewById(R.id.count);
+
+                final EditText sum = (EditText) manualDialog.findViewById(R.id.sum);
+
+                final Spinner spinner = (Spinner) manualDialog.findViewById(R.id.shopSpinner);
+                Button cancel = (Button)manualDialog.findViewById(R.id.cancel);
+                cancel.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        manualDialog.dismiss();
+                    }
+                });
+
+                Button ok = (Button)manualDialog.findViewById(R.id.ok);
+                ok.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                        boolean error = false;
+
+                        if (Utils.checkEditText(article) == true) {
+                            error = true;
+                        }
+
+                        if (Utils.checkEditText(sum) == true) {
+                            error = true;
+                        }
+
+                        if (Utils.checkEditText(count) == true) {
+                            error = true;
+                        }
+
+                        if (error) {
+                            return;
+                        }
+
+                        manualDialog.dismiss();
+
+                        String articleStr = String.valueOf(article.getText());
+                        Double sumValue = Double.valueOf(String.valueOf(sum.getText()));
+                        Integer countValue = Integer.valueOf(String.valueOf(count.getText()));
+                        String shop = (String) spinner.getSelectedItem();
+                        int month = Calendar.getInstance().get(Calendar.MONTH) + 1;
+                        int day = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
+                        int year = Calendar.getInstance().get(Calendar.YEAR);
+                        DAOUtils.addExpenseItem(shop, articleStr, "", countValue, sumValue, day, month, year);
+                        Intent intent = new Intent(getContext(), DailyExpenseList.class);
+                        intent.putExtra("day", day);
+                        intent.putExtra("month", month);
+                        intent.putExtra("shop", shop);
+                        startActivityForResult(intent, DISPLAY_DAILY_EXPENSE);
+                        new QueryMonthlyRecords().execute("Book");
+                    }
+                });
+
+
+                manualDialog.show();
+            }
+        });
+
+        final ImageButton takePhoto = (ImageButton) inputModeView.findViewById(R.id.scan_input);
+        takePhoto.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                inputModeView.setVisibility(View.GONE);
+                final SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+                if (!sharedPref.getBoolean("hideTutorialDialog", false)) {
+                    final Dialog tutorialDialog = new Dialog(getContext(), android.R.style.Theme_Light_NoTitleBar_Fullscreen);
+                    tutorialDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                    tutorialDialog.setContentView(R.layout.take_photo_tutorial);
+
+                    ViewPager viewPager = (ViewPager) tutorialDialog.findViewById(R.id.tutorialViewpager);
+
+                    viewPager.setAdapter(new CustomViewPagerAdapter());
+                    viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+
+                        View[] dots = {
+                                tutorialDialog.findViewById(R.id.dot1),
+                                tutorialDialog.findViewById(R.id.dot2),
+                                tutorialDialog.findViewById(R.id.dot3),
+                                tutorialDialog.findViewById(R.id.dot4),
+                                tutorialDialog.findViewById(R.id.dot5)
+                        };
+                        @Override
+                        public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+                        }
+
+                        @Override
+                        public void onPageSelected(int position) {
+                            for (View dot:dots) {
+                                ((ImageView)dot).setImageResource(R.drawable.dot);
+                            }
+                            ((ImageView)dots[position]).setImageResource(R.drawable.greydot);
+                        }
+
+                        @Override
+                        public void onPageScrollStateChanged(int state) {
+
+                        }
+                    });
+
+
+                    final CheckBox checkBox = (CheckBox) tutorialDialog.findViewById(R.id.noShow);
+                    Button camera = (Button)tutorialDialog.findViewById(R.id.launchCamera);
+                    camera.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            SharedPreferences.Editor editor = sharedPref.edit();
+                            editor.putBoolean("hideTutorialDialog", checkBox.isChecked());
+                            editor.commit();
+                            tutorialDialog.dismiss();
+                            Intent intent = new Intent(getContext(), takePhotoActivity.class);
+                            startActivity(intent);
+                        }
+                    });
+                    tutorialDialog.show();
+                } else {
+                    Intent intent = new Intent(getContext(), takePhotoActivity.class);
+                    startActivity(intent);
+                }
+            }
+        });
 
         ImageButton tile = (ImageButton) rootView.findViewById(R.id.tile);
         tile.setOnClickListener(new ImageButton.OnClickListener() {
@@ -182,146 +314,17 @@ public class ExpenseTimelineFragment extends Fragment {
         fab.setOnClickListener(new ImageButton.OnClickListener() {
             @Override
             public void onClick(View view) {
-/*                DAOUtils.addExpenseItem("REWE", "Coca Cola", "Drink",  1, 1.99, 19, 3, 2017);
-                DAOUtils.addExpenseItem("REWE", "Milk", "Drink", 1, 1.99, 19, 3, 2017);
-
-                DAOUtils.addExpenseItem("LIDL", "Coca Cola", "Drink", 1, 1.99, 19, 3, 2017);
-
-                DAOUtils.addExpenseItem("ALDI", "Coca Cola", "Drink", 1, 1.99, 18, 3, 2017);*/
-
-                new QueryMonthlyRecords().execute("Book");
-
-                final Dialog dialog = new Dialog(getContext());
-                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-                dialog.setContentView(R.layout.input_modes_popup);
-                //dialog.setTitle("OCR Result");
-                //((TextView)dialog.findViewById(R.id.ocrTextView)).setText(text);
-                dialog.show();
-
-                final Button manual = (Button) dialog.findViewById(R.id.manuel_input);
-                manual.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        dialog.dismiss();
-                        final Dialog manualDialog = new Dialog(getContext());
-                        manualDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-                        manualDialog.setContentView(R.layout.manual_add_item);
-
-                        final EditText article = (EditText) manualDialog.findViewById(R.id.article);
-
-                        final EditText count = (EditText) manualDialog.findViewById(R.id.count);
-
-                        final EditText sum = (EditText) manualDialog.findViewById(R.id.sum);
-
-                        final Spinner spinner = (Spinner) manualDialog.findViewById(R.id.shopSpinner);
-
-                        Button ok = (Button)manualDialog.findViewById(R.id.ok);
-                        ok.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-
-                                boolean error = false;
-
-                                if (checkEditText(article) == true) {
-                                    error = true;
-                                }
-
-                                if (checkEditText(sum) == true) {
-                                    error = true;
-                                }
-
-                                if (checkEditText(count) == true) {
-                                    error = true;
-                                }
-
-                                if (error) {
-                                    return;
-                                }
-
-                                manualDialog.dismiss();
-
-                                String articleStr = String.valueOf(article.getText());
-                                Double sumValue = Double.valueOf(String.valueOf(sum.getText()));
-                                Integer countValue = Integer.valueOf(String.valueOf(count.getText()));
-                                String shop = (String) spinner.getSelectedItem();
-                                int month = Calendar.getInstance().get(Calendar.MONTH) + 1;
-                                int day = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
-                                int year = Calendar.getInstance().get(Calendar.YEAR);
-                                DAOUtils.addExpenseItem(shop, articleStr, "", countValue, sumValue, day, month, year);
-                                new QueryMonthlyRecords().execute("Book");
-                            }
-                        });
-
-
-                        manualDialog.show();
-                    }
-                });
-
-                final Button takePhoto = (Button)dialog.findViewById(R.id.scan_input);
-                takePhoto.setOnClickListener(new Button.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        dialog.dismiss();
-                        final SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
-                        if (!sharedPref.getBoolean("hideTutorialDialog", false)) {
-                            final Dialog tutorialDialog = new Dialog(getContext(), android.R.style.Theme_Light_NoTitleBar_Fullscreen);
-                            tutorialDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-                            tutorialDialog.setContentView(R.layout.take_photo_tutorial);
-
-                            ViewPager viewPager = (ViewPager) tutorialDialog.findViewById(R.id.tutorialViewpager);
-
-                            viewPager.setAdapter(new CustomViewPagerAdapter());
-                            viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-
-                                View[] dots = {
-                                        tutorialDialog.findViewById(R.id.dot1),
-                                        tutorialDialog.findViewById(R.id.dot2),
-                                        tutorialDialog.findViewById(R.id.dot3),
-                                        tutorialDialog.findViewById(R.id.dot4),
-                                        tutorialDialog.findViewById(R.id.dot5)
-                                };
-                                @Override
-                                public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
-                                }
-
-                                @Override
-                                public void onPageSelected(int position) {
-                                    for (View dot:dots) {
-                                        ((ImageView)dot).setImageResource(R.drawable.dot);
-                                    }
-                                    ((ImageView)dots[position]).setImageResource(R.drawable.greydot);
-                                }
-
-                                @Override
-                                public void onPageScrollStateChanged(int state) {
-
-                                }
-                            });
-
-
-                            final CheckBox checkBox = (CheckBox) tutorialDialog.findViewById(R.id.noShow);
-                            Button camera = (Button)tutorialDialog.findViewById(R.id.launchCamera);
-                            camera.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    SharedPreferences.Editor editor = sharedPref.edit();
-                                    editor.putBoolean("hideTutorialDialog", checkBox.isChecked());
-                                    editor.commit();
-                                    tutorialDialog.dismiss();
-                                    Intent intent = new Intent(getContext(), takePhotoActivity.class);
-                                    startActivityForResult(intent, REQUEST_SCAN);
-                                }
-                            });
-                            tutorialDialog.show();
-                        } else {
-                            Intent intent = new Intent(getContext(), takePhotoActivity.class);
-                            startActivityForResult(intent, REQUEST_SCAN);
-                        }
-                    }
-                });
+            if (inputModeView.getVisibility() == View.VISIBLE) {
+                inputModeView.setVisibility(View.GONE);
+            } else {
+                inputModeView.setVisibility(View.VISIBLE);
+            }
             }
         });
+
+        Calendar calendar = Calendar.getInstance();
+        month = calendar.get(Calendar.MONTH) + 1;
+        year = calendar.get(Calendar.YEAR);
 
         new QueryMonthlyRecords().execute("Book");
 
@@ -362,22 +365,6 @@ public class ExpenseTimelineFragment extends Fragment {
         }
     }
 
-    private File createImageFile() throws IOException {
-        // Create an image file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-
-        File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                ".jpg",         /* suffix */
-                storageDir      /* directory */
-        );
-
-        // Save a file: path for use with ACTION_VIEW intents
-        return image;
-    }
-
 
     private class QueryMonthlyRecords extends AsyncTask<String, Void, Void> {
 
@@ -386,10 +373,10 @@ public class ExpenseTimelineFragment extends Fragment {
         protected Void doInBackground(String... params) {
             timelineDataSet.clear();
 
-            monthlyIncome = DAOUtils.queryMonthlyIncomeSum(3, 2017);
-            monthlyExpense = DAOUtils.queryMonthlyExpenseSum(3, 2017);
+            monthlyIncome = DAOUtils.queryMonthlyIncomeSum(month, year);
+            monthlyExpense = DAOUtils.queryMonthlyExpenseSum(month, year);
 
-            ArrayList<ContentValues> values = DAOUtils.queryItemsByMonth(3, 2017);
+            ArrayList<ContentValues> values = DAOUtils.queryItemsByMonth(month, year);
 
             for (ContentValues obj : values) {
                 Integer day = obj.getAsInteger("day");
@@ -661,7 +648,6 @@ public class ExpenseTimelineFragment extends Fragment {
                 String sum = (((ExpenseItem) item).contentValues.getAsString(DAO.ItemEntry.COLUMN_NAME_SUM));
                 expenseViewHolder.expense.setText( shop + " " + sum);
 
-                //expenseViewHolder.icon.setImageResource(map.get(shop));
                 expenseViewHolder.icon.setBackgroundResource(getIconImage(shop));
                 expenseViewHolder.icon.setOnClickListener(new ImageButton.OnClickListener() {
                     @Override

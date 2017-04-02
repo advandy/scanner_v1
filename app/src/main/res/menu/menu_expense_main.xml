@@ -8,4 +8,12 @@
         android:icon="@drawable/add"
         app:showAsAction="always"
         android:title="Add"/>
+
+    <item
+        android:id="@+id/save"
+        android:icon="@android:drawable/ic_menu_save"
+        android:orderInCategory="100"
+        android:title="SAVE"
+        android:visible="false"
+        app:showAsAction="always" />
 </menu>

@@ -28,8 +28,6 @@ import java.util.Date;
 public class takePhotoActivity extends Activity {
 
     public static final int REQUEST_IMAGE_CAPTURE = 1;
-    public static final int REQUEST_OCR = 2;
-    public static final int REQUEST_IMAGE_CROP = 3;
     File imageFile;
 
     @Override
@@ -52,58 +50,12 @@ public class takePhotoActivity extends Activity {
 
             Intent intent = new Intent(takePhotoActivity.this, CropImageActivity.class);
             intent.putExtra("imageUri", Uri.fromFile(imageFile).getPath());
-
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
-            /*CropImage.activity(Uri.fromFile(imageFile))
-                    .setGuidelines(CropImageView.Guidelines.ON)
-                    .start(this);*/
+            this.finish();
         } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_CANCELED) {
             imageFile.delete();
             backToTimeline();
-        }
-
-        if (requestCode == REQUEST_OCR) {
-            if (resultCode == RESULT_CANCELED) {
-                imageFile.delete();
-                backToTimeline();
-            } else if (resultCode == RESULT_OK) {
-                // TODO: 24.03.2017 Process response from server
-                imageFile.delete();
-                backToTimeline();
-            }
-        }
-
-        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
-            CropImage.ActivityResult result = CropImage.getActivityResult(data);
-            if (resultCode == RESULT_OK) {
-                Intent toDetailIntent = new Intent(takePhotoActivity.this, OcrDetailActivity.class);
-                toDetailIntent.putExtra("imagePath", result.getUri().getPath());
-                startActivityForResult(toDetailIntent, REQUEST_OCR);
-
-                //MainActivity.ImageDocument imageDocument = new MainActivity.ImageDocument(null, null, null);
-                //imageDocument.timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-                Bitmap image = decodeSampledBitmapFromFile(result.getUri().getPath(),1000, 1000);
-                //imageDocument.imagePath = result.getUri().getPath();
-                OutputStream outStream = null;
-                try {
-                    outStream = new FileOutputStream(imageFile);
-                    image.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
-                    outStream.flush();
-                    outStream.close();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
-                Exception error = result.getError();
-                imageFile.delete();
-                backToTimeline();
-            } else if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE && resultCode == RESULT_CANCELED) {
-                imageFile.delete();
-                backToTimeline();
-            }
         }
     }
 
@@ -148,37 +100,4 @@ public class takePhotoActivity extends Activity {
         }
     }
 
-    public static Bitmap decodeSampledBitmapFromFile(String path, int reqWidth, int reqHeight)
-    { // BEST QUALITY MATCH
-
-        //First decode with inJustDecodeBounds=true to check dimensions
-        final BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(path, options);
-
-        // Calculate inSampleSize, Raw height and width of image
-        final int height = options.outHeight;
-        final int width = options.outWidth;
-        options.inPreferredConfig = Bitmap.Config.RGB_565;
-        int inSampleSize = 1;
-
-        if (height > reqHeight)
-        {
-            inSampleSize = Math.round((float)height / (float)reqHeight);
-        }
-        int expectedWidth = width / inSampleSize;
-
-        if (expectedWidth > reqWidth)
-        {
-            //if(Math.round((float)width / (float)reqWidth) > inSampleSize) // If bigger SampSize..
-            inSampleSize = Math.round((float)width / (float)reqWidth);
-        }
-
-        options.inSampleSize = inSampleSize;
-
-        // Decode bitmap with inSampleSize set
-        options.inJustDecodeBounds = false;
-
-        return BitmapFactory.decodeFile(path, options);
-    }
 }

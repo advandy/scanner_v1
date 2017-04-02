@@ -29,9 +29,13 @@ import java.util.Date;
 import cheng.yunhan.butler.customview.BottomImageView;
 import cheng.yunhan.butler.customview.ChooseArea;
 
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+
 public class CropImageActivity extends AppCompatActivity {
 
     private String imagePath;
+    private BottomImageView bottomImageView;
+    private ChooseArea chooseArea;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,14 +56,14 @@ public class CropImageActivity extends AppCompatActivity {
         setContentView(R.layout.main);
 
 
-        final BottomImageView bottomImageView = (BottomImageView)findViewById(R.id.layout2_bottomView);
+        bottomImageView = (BottomImageView)findViewById(R.id.layout2_bottomView);
         bottomImageView.setDrawingCacheEnabled(true);
         bottomImageView.setImageBitmap(image);
         ImageView zoomArea = (ImageView)findViewById(R.id.layout2_imageAbove);
         zoomArea.setImageBitmap(image);
         zoomArea.buildDrawingCache();
 
-        final ChooseArea chooseArea = (ChooseArea)findViewById(R.id.layout2_topView);
+        chooseArea = (ChooseArea)findViewById(R.id.layout2_topView);
 
         bottomImageView.setZoomView(zoomArea);
         chooseArea.setBottomView(bottomImageView);
@@ -91,7 +95,6 @@ public class CropImageActivity extends AppCompatActivity {
                 int imageViewWidth = bottomImageView.getWidth();
 
                 Bitmap bitmap1= image;
-                //Bitmap bitmap2= bitmap1.copy(bitmap1.getConfig(), false);
 
                 Point[] points = chooseArea.getPoints();
 
@@ -120,18 +123,19 @@ public class CropImageActivity extends AppCompatActivity {
                 paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
                 canvas.drawBitmap(bitmap1, 0, 0, paint);
 
-                //resultingImage = Bitmap.createBitmap(resultingImage, points[0].x*xFactor.intValue(), points[0].y*yFactor.intValue(), points[1].x*xFactor.intValue() - points[0].x*xFactor.intValue(), points[3].y*yFactor.intValue() - points[0].y*yFactor.intValue() );
                 resultingImage = getRectImage(points, xFactor, yFactor, resultingImage);
                 try {
                     File image = new File(imagePath);
                     OutputStream outStream = new FileOutputStream(image);
-                    resultingImage.compress(Bitmap.CompressFormat.JPEG, 80, outStream);
+                    resultingImage.compress(Bitmap.CompressFormat.JPEG, 20, outStream);
                     outStream.flush();
                     outStream.close();
                     pb.setVisibility(View.INVISIBLE);
                     Intent intent = new Intent(CropImageActivity.this, OcrDetailActivity.class);
                     intent.putExtra("imagePath", imagePath);
+                    intent.addFlags(intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
+                    finish();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -139,16 +143,18 @@ public class CropImageActivity extends AppCompatActivity {
         });
     }
 
+
     @Override
-    public void onBackPressed() {
-        Intent intent = new Intent(CropImageActivity.this, ExpenseMainActivity.class);
-        startActivity(intent);
+    public void onWindowFocusChanged(boolean hasFocus) {
+        //super.onWindowFocusChanged(hasFocus);
+        int height = bottomImageView.getHeight();
+        int width = bottomImageView.getWidth();
+        chooseArea.setRegion(new Point(0, 0), new Point(width, 0), new Point(width, height), new Point(0, height));
+        chooseArea.invalidate();
     }
 
     private Bitmap getRectImage(Point[] points, Float xFactor, Float yFactor, Bitmap image) {
 
-        int witdth= image.getWidth();
-        int height = image.getHeight();
 
         int x = points[0].x < points[3].x ? points[0].x : points[3].x;
         int y = points[0].y < points[1].y ? points[0].y :  points[1].y;

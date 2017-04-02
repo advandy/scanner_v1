@@ -33,6 +33,12 @@ public class DAO {
         this.db = dbHelper.getWritableDatabase();
     }
 
+    public void saveDailyExpense(ArrayList<ContentValues> shoppingList) {
+        for (ContentValues item : shoppingList) {
+            db.insert(ItemEntry.TABLE_NAME, "", item);
+        }
+    }
+
 
     public double queryMonthlyIncomeSum(int month, int year) {
         Cursor cursor= db.rawQuery("Select sum(income_sum) as income_sum from item where month=" + month + " AND year=" + year, null);

@@ -23,9 +23,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class DailyExpenseList extends AppCompatActivity {
     private DAO DaoUtils;
@@ -37,60 +39,99 @@ public class DailyExpenseList extends AppCompatActivity {
     private ShoppingListViewAdapter shoppingListViewAdapter;
 
     private boolean draftModus = true;
+    private ArrayList<ContentValues> shoppingList;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_expense_main, menu);
+        if (draftModus == true) {
+            MenuItem saveItem = menu.findItem(R.id.save);
+            saveItem.setVisible(true);
+        }
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        final Dialog dialog = new Dialog(this);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.edit_item);
+        int itemId = item.getItemId();
+        switch (itemId) {
+            case R.id.save:
+                if (shoppingList.size() == 0) {
+                    Toast.makeText(this, "No items to be saved", Toast.LENGTH_SHORT);
+                }
+                DaoUtils.saveDailyExpense(shoppingList);
+                break;
+            case R.id.addItem:
+                final Dialog dialog = new Dialog(this);
+                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                dialog.setContentView(R.layout.edit_item);
 
-        final ContentValues entry = new ContentValues();
+                final ContentValues entry = new ContentValues();
 
-        final EditText article = (EditText) dialog.findViewById(R.id.article);
-        article.setText(entry.getAsString(DAO.ItemEntry.COLUMN_NAME_ARTICLE));
+                final EditText article = (EditText) dialog.findViewById(R.id.article);
+                article.setText(entry.getAsString(DAO.ItemEntry.COLUMN_NAME_ARTICLE));
 
-        final EditText count = (EditText) dialog.findViewById(R.id.count);
-        count.setText(entry.getAsString(DAO.ItemEntry.COLUMN_NAME_COUNT));
+                final EditText count = (EditText) dialog.findViewById(R.id.count);
+                count.setText(entry.getAsString(DAO.ItemEntry.COLUMN_NAME_COUNT));
 
-        final EditText sum = (EditText) dialog.findViewById(R.id.sum);
-        sum.setText(entry.getAsString(DAO.ItemEntry.COLUMN_NAME_SUM));
+                final EditText sum = (EditText) dialog.findViewById(R.id.sum);
+                sum.setText(entry.getAsString(DAO.ItemEntry.COLUMN_NAME_SUM));
 
-        Button ok = (Button) dialog.findViewById(R.id.ok);
-        ok.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                Button ok = (Button) dialog.findViewById(R.id.ok);
+                ok.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
 
-                String articleStr = String.valueOf(article.getText());
-                Double sumValue = Double.valueOf(String.valueOf(sum.getText()));
-                Integer countValue = Integer.valueOf(String.valueOf(count.getText()));
+                        boolean error = false;
+                        if (Utils.checkEditText(article)) {
+                            error = true;
+                        }
 
-                entry.put(DAO.ItemEntry.COLUMN_NAME_ARTICLE, articleStr);
-                entry.put(DAO.ItemEntry.COLUMN_NAME_SUM, String.valueOf(sum.getText()));
-                entry.put(DAO.ItemEntry.COLUMN_NAME_COUNT, String.valueOf(count.getText()));
+                        if (Utils.checkEditText(sum)) {
+                            error = true;
+                        }
 
-                DaoUtils.addExpenseItem(query_shop, articleStr, "", countValue, sumValue, query_day, query_month, 2017);
-                shoppingListViewAdapter.add(entry);
-                updated = true;
-                dialog.dismiss();
-            }
-        });
+                        if (Utils.checkEditText(count)){
+                            error = true;
+                        }
 
-        Button cancel = (Button) dialog.findViewById(R.id.cancel);
-        cancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-            }
-        });
+                        if (error) {
+                            return;
+                        }
 
-        dialog.show();
+                        String articleStr = String.valueOf(article.getText());
+                        Double sumValue = Double.valueOf(String.valueOf(sum.getText()));
+                        Integer countValue = Integer.valueOf(String.valueOf(count.getText()));
+
+                        entry.put(DAO.ItemEntry.COLUMN_NAME_ARTICLE, articleStr);
+                        entry.put(DAO.ItemEntry.COLUMN_NAME_SUM, String.valueOf(sum.getText()));
+                        entry.put(DAO.ItemEntry.COLUMN_NAME_COUNT, String.valueOf(count.getText()));
+                        entry.put(DAO.ItemEntry.COLUMN_NAME_SHOP, query_shop);
+                        entry.put(DAO.ItemEntry.COLUMN_NAME_DAY, query_day);
+                        entry.put(DAO.ItemEntry.COLUMN_NAME_MONTH, query_month);
+                        entry.put(DAO.ItemEntry.COLUMN_NAME_YEAR, 2017);
+                        if (draftModus == false) {
+                            DaoUtils.saveDailyExpense(new ArrayList<ContentValues>(Arrays.asList(entry)));
+                            //DaoUtils.addExpenseItem(query_shop, articleStr, "", countValue, sumValue, query_day, query_month, 2017);
+                        }
+                        shoppingListViewAdapter.add(entry);
+                        updated = true;
+                        dialog.dismiss();
+                    }
+                });
+
+                Button cancel = (Button) dialog.findViewById(R.id.cancel);
+                cancel.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                    }
+                });
+
+                dialog.show();
+                break;
+        }
 
         return true;
     }
@@ -110,10 +151,10 @@ public class DailyExpenseList extends AppCompatActivity {
 
         DaoUtils = DAO.getInstance(this);
 
-        ArrayList<ContentValues> shoppingList = intent.getParcelableArrayListExtra("shoppinglist");
+        shoppingList = intent.getParcelableArrayListExtra("shoppinglist");
 
         if (shoppingList == null) {
-            DaoUtils.queryDailyShopItems(query_day, query_month, 2017, query_shop);
+            shoppingList = DaoUtils.queryDailyShopItems(query_day, query_month, 2017, query_shop);
             draftModus = false;
         }
         shoppingListViewAdapter = new ShoppingListViewAdapter(this,0);
@@ -167,8 +208,11 @@ public class DailyExpenseList extends AppCompatActivity {
                             entry.put(DAO.ItemEntry.COLUMN_NAME_SUM, String.valueOf(sum.getText()));
                             entry.put(DAO.ItemEntry.COLUMN_NAME_COUNT, String.valueOf(count.getText()));
 
-                            DaoUtils.updateExpenseItem(id, entry);
+                            if (draftModus == false) {
+                                DaoUtils.updateExpenseItem(id, entry);
+                            }
                             updated = true;
+                            shoppingListViewAdapter.notifyDataSetChanged();
                             dialog.dismiss();
                         }
                     });
