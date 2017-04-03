@@ -9,7 +9,7 @@
         android:id="@+id/imageView6"
         android:layout_width="0dp"
         android:layout_height="160dp"
-        android:background="@drawable/travel"
+        android:background="@drawable/background"
         tools:layout_editor_absoluteX="8dp"
         tools:layout_editor_absoluteY="16dp" />
 

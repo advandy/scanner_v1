@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/all"
+        android:icon="@drawable/rect"
+        android:orderInCategory="100"
+        android:title="all"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/crop"
+        android:icon="@drawable/cropimage"
+        android:orderInCategory="100"
+        android:title="crop"
+        app:showAsAction="always" />
+
+</menu>

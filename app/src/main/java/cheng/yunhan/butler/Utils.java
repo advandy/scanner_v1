@@ -23,6 +23,7 @@ public class Utils {
         return new HashMap<String, Integer>(){
             {
                 put("Rewe", R.drawable.rewe);
+                put("Penny", R.drawable.penny);
                 put("Aldi", R.drawable.aldi);
                 put("Lidl", R.drawable.lidl);
                 put("Dm", R.drawable.dm);

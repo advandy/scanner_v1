@@ -9,13 +9,14 @@ import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
-import android.os.Environment;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 
@@ -23,37 +24,38 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import cheng.yunhan.butler.customview.BottomImageView;
 import cheng.yunhan.butler.customview.ChooseArea;
 
-import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
-
 public class CropImageActivity extends AppCompatActivity {
 
     private String imagePath;
+    private Bitmap image;
     private BottomImageView bottomImageView;
     private ChooseArea chooseArea;
+    private int originHeight;
+    private int originWidth;
+    private ProgressBar pb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setTheme(R.style.AppTheme_NoActionBar);
         super.onCreate(savedInstanceState);
 
         Intent intent = getIntent();
         imagePath = intent.getStringExtra("imageUri");
 
-        final Bitmap image = BitmapFactory.decodeFile(imagePath);
+        image = BitmapFactory.decodeFile(imagePath);
 
-        final int originWidth = image.getWidth();
-        final int originHeight = image.getHeight();
+        originWidth = image.getWidth();
+        originHeight = image.getHeight();
 
 
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        requestWindowFeature(Window.FEATURE_ACTION_BAR);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        setContentView(R.layout.main);
+        setContentView(R.layout.crop_image);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 
         bottomImageView = (BottomImageView)findViewById(R.id.layout2_bottomView);
@@ -73,22 +75,31 @@ public class CropImageActivity extends AppCompatActivity {
 
         chooseArea.setRegion(new Point(100, 100), new Point(width - 100, 100), new Point(width - 100, height - 100), new Point(100, height - 100));
 
-        Button wholePicBtn = (Button) findViewById(R.id.button3);
-        wholePicBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        pb = (ProgressBar) findViewById(R.id.cropProgress);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_crop_image, menu);
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case android.R.id.home:
+                onBackPressed();
+                break;
+            case R.id.all:
                 int height = bottomImageView.getHeight();
                 int width = bottomImageView.getWidth();
                 chooseArea.setRegion(new Point(0, 0), new Point(width, 0), new Point(width, height), new Point(0, height));
                 chooseArea.invalidate();
-            }
-        });
-
-        Button btn = (Button) findViewById(R.id.button);
-        final ProgressBar pb = (ProgressBar) findViewById(R.id.cropProgress);
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                break;
+            case R.id.crop:
                 pb.setVisibility(View.VISIBLE);
                 int imageViewHeight = bottomImageView.getHeight();
 
@@ -98,9 +109,9 @@ public class CropImageActivity extends AppCompatActivity {
 
                 Point[] points = chooseArea.getPoints();
 
-                int width = bitmap1.getWidth();
+                width = bitmap1.getWidth();
 
-                int height = bitmap1.getHeight();
+                height = bitmap1.getHeight();
 
                 Float yFactor = (float)originHeight/(float)imageViewHeight;
                 Float xFactor = (float)originWidth/(float)imageViewWidth;
@@ -139,18 +150,24 @@ public class CropImageActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }
-        });
+                break;
+        }
+
+        return true;
     }
 
-
+    private boolean noReset = false;
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
+        if (noReset == true) {
+            return;
+        }
         //super.onWindowFocusChanged(hasFocus);
         int height = bottomImageView.getHeight();
         int width = bottomImageView.getWidth();
         chooseArea.setRegion(new Point(0, 0), new Point(width, 0), new Point(width, height), new Point(0, height));
         chooseArea.invalidate();
+        noReset = true;
     }
 
     private Bitmap getRectImage(Point[] points, Float xFactor, Float yFactor, Bitmap image) {
