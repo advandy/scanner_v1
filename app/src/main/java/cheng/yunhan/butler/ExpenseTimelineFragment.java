@@ -558,22 +558,6 @@ public class ExpenseTimelineFragment extends Fragment {
                 this.icon = icon;
                 this.edit = edit;
                 this.delete = delete;
-/*                this.icon.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (isEditMode) {
-                            isEditMode = false;
-                            expense.setVisibility(View.VISIBLE);
-                            delete.setVisibility(View.INVISIBLE);
-                            edit.setVisibility(View.INVISIBLE);
-                        } else {
-                            isEditMode = true;
-                            expense.setVisibility(View.INVISIBLE);
-                            delete.setVisibility(View.VISIBLE);
-                            edit.setVisibility(View.VISIBLE);
-                        }
-                    }
-                });*/
             }
         }
 
@@ -587,14 +571,7 @@ public class ExpenseTimelineFragment extends Fragment {
             }
         }
 
-        private Map<String, Integer> map = new HashMap<String, Integer>(){
-            {
-                put("REWE", R.drawable.rewe);
-                put("ALDI", R.drawable.aldi);
-                put("LIDL", R.drawable.lidl);
-                put("DM", R.drawable.dm);
-            }
-        };
+        private Map<String, Integer> map = Utils.getIcons();
 
         private int getIconImage(String shop) {
             Integer icon = map.get(shop);

@@ -5,9 +5,18 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string-array name="shop_name">
-        <item>ALDI</item>
-        <item>REWE</item>
-        <item>LIDL</item>
-        <item>OTHERS</item>
+        <item>Aldi</item>
+        <item>Dm</item>
+        <item>Douglas</item>
+        <item>GaleriaKaufhof</item>
+        <item>Kaufland</item>
+        <item>Lidl</item>
+        <item>Mueller</item>
+        <item>Netto</item>
+        <item>Penny</item>
+        <item>Real</item>
+        <item>Rewe</item>
+        <item>Rossman</item>
+        <item>Others</item>
     </string-array>
 </resources>
