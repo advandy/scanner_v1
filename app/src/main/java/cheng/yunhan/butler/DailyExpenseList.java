@@ -4,12 +4,14 @@ import android.app.Dialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -23,6 +25,10 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,6 +44,7 @@ public class DailyExpenseList extends AppCompatActivity {
 
     private boolean draftModus = true;
     private ArrayList<ContentValues> shoppingList;
+    private String picUrl;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -58,10 +65,18 @@ public class DailyExpenseList extends AppCompatActivity {
                 onBackPressed();
                 break;
             case R.id.save:
-                if (shoppingList.size() == 0) {
+                if (shoppingListViewAdapter.getCount() == 0) {
                     Toast.makeText(this, "No items to be saved", Toast.LENGTH_SHORT);
+                    return true;
                 }
+                shoppingList = getShoppingList();
                 DaoUtils.saveDailyExpense(shoppingList);
+                Intent intent = new Intent(DailyExpenseList.this, ExpenseMainActivity.class);
+                intent.putExtra("updated", updated);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+                finish();
+                new SendResultToServer().execute(shoppingList);
                 break;
             case R.id.addItem:
                 final Dialog dialog = new Dialog(this);
@@ -149,6 +164,7 @@ public class DailyExpenseList extends AppCompatActivity {
         query_shop = intent.getStringExtra("shop");
         query_day = intent.getIntExtra("day", 0);
         query_month = intent.getIntExtra("month", 0);
+        picUrl = intent.getStringExtra("picUrl");
 
         shoppingListView = (ListView) findViewById(R.id.dailyShoppingListView);
 
@@ -165,9 +181,20 @@ public class DailyExpenseList extends AppCompatActivity {
         shoppingListView.setAdapter(shoppingListViewAdapter);
 
     }
+    private ArrayList<ContentValues> getShoppingList() {
+        if (updated == true) {
+            shoppingList.clear();
+            for (int i = 0; i < shoppingListViewAdapter.getCount(); i++) {
+                shoppingList.add(shoppingListViewAdapter.getItem(i));
+            }
+        }
+
+        return shoppingList;
+    }
+
+    private class ShoppingListViewAdapter extends ArrayAdapter<ContentValues> {
 
 
-    public class ShoppingListViewAdapter extends ArrayAdapter<ContentValues> {
 
         public ShoppingListViewAdapter(@NonNull Context context, @LayoutRes int resource) {
             super(context, resource);
@@ -206,6 +233,22 @@ public class DailyExpenseList extends AppCompatActivity {
                         @Override
                         public void onClick(View v) {
                             String id = entry.getAsString(DAO.ItemEntry._ID);
+                            boolean error = false;
+                            if (Utils.checkEditText(article)) {
+                                error = true;
+                            }
+
+                            if (Utils.checkEditText(sum)) {
+                                error = true;
+                            }
+
+                            if (Utils.checkEditText(count)){
+                                error = true;
+                            }
+
+                            if (error) {
+                                return;
+                            }
 
                             entry.put(DAO.ItemEntry.COLUMN_NAME_ARTICLE, String.valueOf(article.getText()));
                             entry.put(DAO.ItemEntry.COLUMN_NAME_SUM, String.valueOf(sum.getText()));
@@ -238,7 +281,33 @@ public class DailyExpenseList extends AppCompatActivity {
         }
     }
 
+    private class SendResultToServer extends AsyncTask<ArrayList<ContentValues>, Void, Void> {
 
+        @Override
+        protected Void doInBackground(ArrayList<ContentValues>... params) {
+            JSONObject resObj = new JSONObject();
+            try {
+                resObj.put("pic_url", picUrl);
+                JSONArray arr = new JSONArray();
+                JSONObject itemObj;
+                for (int i = 0; i < params[0].size(); i++) {
+                    ContentValues values = params[0].get(i);
+                    itemObj = new JSONObject();
+                    itemObj.put("name", values.get(DAO.ItemEntry.COLUMN_NAME_ARTICLE));
+                    itemObj.put("count", values.get(DAO.ItemEntry.COLUMN_NAME_COUNT));
+                    itemObj.put("price", values.get(DAO.ItemEntry.COLUMN_NAME_SUM));
+                    arr.put(itemObj);
+                }
+                resObj.put("items", arr);
+                resObj.put("hasChanged", updated);
+                Log.i("","");
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
 
     @Override
     public void onBackPressed() {

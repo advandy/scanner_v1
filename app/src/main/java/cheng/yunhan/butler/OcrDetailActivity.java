@@ -122,6 +122,7 @@ public class OcrDetailActivity extends AppCompatActivity {
                 JSONObject json = new JSONObject(result); //Convert String to JSON Object
 
                 JSONObject resp = json.getJSONObject("result");
+                String picUrl = json.getString("pic_url");
                 JSONArray items = resp.getJSONArray("items");
                 for (int i = 0; i < items.length(); i ++) {
                     JSONObject item = items.getJSONObject(i);
@@ -143,6 +144,7 @@ public class OcrDetailActivity extends AppCompatActivity {
                 intent.putExtra("day", day);
                 intent.putExtra("month", month);
                 intent.putExtra("shop", shopName);
+                intent.putExtra("picUrl", picUrl);
                 intent.putParcelableArrayListExtra("shoppinglist", shoppinglist);
                 intent.addFlags(intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
