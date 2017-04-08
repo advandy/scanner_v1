@@ -84,7 +84,7 @@ public class OcrDetailActivity extends AppCompatActivity {
         protected String doInBackground(Void... params) {
             HttpClientBuilder builder= HttpClientBuilder.create();
             HttpClient httpClient = builder.build();
-            HttpPost httppost = new HttpPost("http://47.92.27.34:8080/ocr_processor/test/");
+            HttpPost httppost = new HttpPost("http://47.92.27.34:8080/ocr_processor/proxy/");
             File imageFile = new File(imagePath);
 
             MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();

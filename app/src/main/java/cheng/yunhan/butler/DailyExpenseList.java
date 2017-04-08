@@ -30,8 +30,18 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import cz.msebera.android.httpclient.HttpEntity;
+import cz.msebera.android.httpclient.HttpResponse;
+import cz.msebera.android.httpclient.client.HttpClient;
+import cz.msebera.android.httpclient.client.methods.HttpPost;
+import cz.msebera.android.httpclient.entity.mime.HttpMultipartMode;
+import cz.msebera.android.httpclient.entity.mime.MultipartEntityBuilder;
+import cz.msebera.android.httpclient.impl.client.HttpClientBuilder;
+import cz.msebera.android.httpclient.util.EntityUtils;
 
 public class DailyExpenseList extends AppCompatActivity {
     private DAO DaoUtils;
@@ -287,7 +297,7 @@ public class DailyExpenseList extends AppCompatActivity {
         protected Void doInBackground(ArrayList<ContentValues>... params) {
             JSONObject resObj = new JSONObject();
             try {
-                resObj.put("pic_url", picUrl);
+                //resObj.put("pic_url", picUrl);
                 JSONArray arr = new JSONArray();
                 JSONObject itemObj;
                 for (int i = 0; i < params[0].size(); i++) {
@@ -299,9 +309,36 @@ public class DailyExpenseList extends AppCompatActivity {
                     arr.put(itemObj);
                 }
                 resObj.put("items", arr);
-                resObj.put("hasChanged", updated);
-                Log.i("","");
+                //resObj.put("isChanged", updated);
 
+                HttpClientBuilder builder= HttpClientBuilder.create();
+                HttpClient httpClient = builder.build();
+                HttpPost httppost = new HttpPost("http://47.92.27.34:8080/ocr_processor/processed/");
+
+                MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
+                multipartEntityBuilder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+                multipartEntityBuilder.addTextBody("isChanged", String.valueOf(updated));
+                multipartEntityBuilder.addTextBody("url", picUrl);
+                multipartEntityBuilder.addTextBody("processedResult", resObj.toString());
+                HttpEntity entity = multipartEntityBuilder.build();
+                httppost.setEntity(entity);
+                String responseString = "";
+                HttpEntity responseEntity = null;
+                try {
+                    HttpResponse response = httpClient.execute(httppost);
+                    responseEntity = response.getEntity();
+                    int statusCode = response.getStatusLine().getStatusCode();;
+                    if (statusCode == 201) {
+                        // Server response
+                        responseString = EntityUtils.toString(responseEntity);
+                    } else {
+                        responseString = "Error occurred! Http Status Code: "
+                                + statusCode;
+                    }
+                    Log.i("", String.valueOf(responseString));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
