@@ -17,6 +17,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -57,6 +58,14 @@ public class OcrDetailActivity extends AppCompatActivity {
         imagePath = intent.getStringExtra("imagePath");
         ImageView im = (ImageView)findViewById(R.id.imageView2);
         im.setImageBitmap(decodeSampledBitmapFromFile(imagePath, 1000, 1000));
+        shopName = intent.getStringExtra("shopName");
+        SpinnerAdapter adapter = spinner.getAdapter();
+        for (int i = 0; i < adapter.getCount(); i++) {
+            if (shopName.matches((String) adapter.getItem(i))) {
+                spinner.setSelection(i);
+                break;
+            }
+        }
 
         FloatingActionButton ocrBtn = (FloatingActionButton) findViewById(R.id.ocrBtn);
         ocrBtn.setOnClickListener(new Button.OnClickListener() {

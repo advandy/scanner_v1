@@ -24,11 +24,15 @@ public class takePhotoActivity extends Activity {
 
     public static final int REQUEST_IMAGE_CAPTURE = 1;
     File imageFile;
+    String shopName;
     private Camera camera;
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Intent intent = getIntent();
+        shopName = intent.getStringExtra("shopName");
 
         //setContentView(new CameraPreview(this));
 
@@ -49,6 +53,7 @@ public class takePhotoActivity extends Activity {
             Intent intent = new Intent(takePhotoActivity.this, CropImageActivity.class);
             intent.putExtra("imageUri", Uri.fromFile(imageFile).getPath());
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.putExtra("shopName", shopName);
             startActivity(intent);
             this.finish();
         } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_CANCELED) {

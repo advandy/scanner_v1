@@ -37,6 +37,7 @@ public class CropImageActivity extends AppCompatActivity {
     private int originHeight;
     private int originWidth;
     private ProgressBar pb;
+    private String shopName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +45,7 @@ public class CropImageActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         imagePath = intent.getStringExtra("imageUri");
+        shopName = intent.getStringExtra("shopName");
 
         image = BitmapFactory.decodeFile(imagePath);
 
@@ -145,6 +147,7 @@ public class CropImageActivity extends AppCompatActivity {
                     Intent intent = new Intent(CropImageActivity.this, OcrDetailActivity.class);
                     intent.putExtra("imagePath", imagePath);
                     intent.addFlags(intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.putExtra("shopName", shopName);
                     startActivity(intent);
                     finish();
                 } catch (IOException e) {

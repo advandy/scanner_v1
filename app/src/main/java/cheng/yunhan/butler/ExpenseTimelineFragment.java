@@ -159,7 +159,8 @@ public class ExpenseTimelineFragment extends Fragment {
 
         final View inputModeView = (View)rootView.findViewById(R.id.input_mode);
 
-        ImageButton manual = (ImageButton) inputModeView.findViewById(R.id.manuel_input);
+        final ImageButton manual = (ImageButton) inputModeView.findViewById(R.id.manuel_input);
+        final Spinner spinner = (Spinner) inputModeView.findViewById(R.id.spinner);
         manual.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -173,6 +174,8 @@ public class ExpenseTimelineFragment extends Fragment {
                 final EditText count = (EditText) manualDialog.findViewById(R.id.count);
 
                 final EditText sum = (EditText) manualDialog.findViewById(R.id.sum);
+
+                final Spinner categorySpinner = (Spinner) manualDialog.findViewById(R.id.categorySpinner);
 
                 final Spinner spinner = (Spinner) manualDialog.findViewById(R.id.shopSpinner);
                 Button cancel = (Button)manualDialog.findViewById(R.id.cancel);
@@ -215,12 +218,12 @@ public class ExpenseTimelineFragment extends Fragment {
                         int month = Calendar.getInstance().get(Calendar.MONTH) + 1;
                         int day = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
                         int year = Calendar.getInstance().get(Calendar.YEAR);
-                        DAOUtils.addExpenseItem(shop, articleStr, "", countValue, sumValue, day, month, year);
+                        DAOUtils.addExpenseItem(shop, articleStr, (String)categorySpinner.getSelectedItem(), countValue, sumValue, day, month, year);
                         Intent intent = new Intent(getContext(), DailyExpenseList.class);
                         intent.putExtra("day", day);
                         intent.putExtra("month", month);
                         intent.putExtra("shop", shop);
-                        startActivityForResult(intent, DISPLAY_DAILY_EXPENSE);
+                        startActivity(intent);
                         new QueryMonthlyRecords().execute("Book");
                     }
                 });
@@ -234,6 +237,7 @@ public class ExpenseTimelineFragment extends Fragment {
         takePhoto.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View v) {
+                final String shopName = (String) spinner.getSelectedItem();
                 inputModeView.setVisibility(View.GONE);
                 final SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
                 if (!sharedPref.getBoolean("hideTutorialDialog", false)) {
@@ -283,12 +287,14 @@ public class ExpenseTimelineFragment extends Fragment {
                             editor.commit();
                             tutorialDialog.dismiss();
                             Intent intent = new Intent(getContext(), takePhotoActivity.class);
+                            intent.putExtra("shopName", shopName);
                             startActivity(intent);
                         }
                     });
                     tutorialDialog.show();
                 } else {
                     Intent intent = new Intent(getContext(), takePhotoActivity.class);
+                    intent.putExtra("shopName", shopName);
                     startActivity(intent);
                 }
             }

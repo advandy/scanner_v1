@@ -19,4 +19,26 @@
         <item>Rossman</item>
         <item>Others</item>
     </string-array>
+    <string-array name="category">
+        <item>Sonstiges</item>
+        <item>Alkoholfreie Getränke</item>
+        <item>Alkoholische Getränke</item>
+        <item>Backwaren / Brot / Kuchen</item>
+        <item>Drogerie</item>
+        <item>Elektrozubehör</item>
+        <item>Fleisch/Wurst</item>
+        <item>Freizeit, Hobby, Mobilität</item>
+        <item>Kaffee / Tea / Aufstriche</item>
+        <item>Kindernahrungs/-pflege</item>
+        <item>Molkerei / Käse / Eier / Fette / Butter</item>
+        <item>Nahrungsmittel</item>
+        <item>Obst / Gemüse / Pflanzen</item>
+        <item>Pfand / Leergut</item>
+        <item>Putz- / Waschmittel</item>
+        <item>Schreibwaren / Presse / Brillen / Saison</item>
+        <item>Süsswaren / Süss- / Salzgebäck</item>
+        <item>Tabak</item>
+        <item>Tiefkühlkost</item>
+        <item>Tiernahrung</item>
+    </string-array>
 </resources>

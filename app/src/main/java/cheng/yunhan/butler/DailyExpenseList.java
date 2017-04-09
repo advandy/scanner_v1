@@ -23,6 +23,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -76,16 +78,13 @@ public class DailyExpenseList extends AppCompatActivity {
                 break;
             case R.id.save:
                 if (shoppingListViewAdapter.getCount() == 0) {
-                    Toast.makeText(this, "No items to be saved", Toast.LENGTH_SHORT);
+                    Toast toast = Toast.makeText(this, "No items to be saved", Toast.LENGTH_SHORT);
+                    toast.show();
                     return true;
                 }
                 shoppingList = getShoppingList();
                 DaoUtils.saveDailyExpense(shoppingList);
-                Intent intent = new Intent(DailyExpenseList.this, ExpenseMainActivity.class);
-                intent.putExtra("updated", updated);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
-                finish();
+                onBackPressed();
                 new SendResultToServer().execute(shoppingList);
                 break;
             case R.id.addItem:
@@ -96,13 +95,12 @@ public class DailyExpenseList extends AppCompatActivity {
                 final ContentValues entry = new ContentValues();
 
                 final EditText article = (EditText) dialog.findViewById(R.id.article);
-                article.setText(entry.getAsString(DAO.ItemEntry.COLUMN_NAME_ARTICLE));
 
                 final EditText count = (EditText) dialog.findViewById(R.id.count);
-                count.setText(entry.getAsString(DAO.ItemEntry.COLUMN_NAME_COUNT));
 
                 final EditText sum = (EditText) dialog.findViewById(R.id.sum);
-                sum.setText(entry.getAsString(DAO.ItemEntry.COLUMN_NAME_SUM));
+
+                final Spinner categorySpinner = (Spinner) dialog.findViewById(R.id.spinner);
 
                 Button ok = (Button) dialog.findViewById(R.id.ok);
                 ok.setOnClickListener(new View.OnClickListener() {
@@ -137,6 +135,7 @@ public class DailyExpenseList extends AppCompatActivity {
                         entry.put(DAO.ItemEntry.COLUMN_NAME_DAY, query_day);
                         entry.put(DAO.ItemEntry.COLUMN_NAME_MONTH, query_month);
                         entry.put(DAO.ItemEntry.COLUMN_NAME_YEAR, 2017);
+                        entry.put(DAO.ItemEntry.COLUMN_NAME_CATEGORY, (String) categorySpinner.getSelectedItem());
                         if (draftModus == false) {
                             DaoUtils.saveDailyExpense(new ArrayList<ContentValues>(Arrays.asList(entry)));
                             //DaoUtils.addExpenseItem(query_shop, articleStr, "", countValue, sumValue, query_day, query_month, 2017);
@@ -217,14 +216,16 @@ public class DailyExpenseList extends AppCompatActivity {
             TextView article = (TextView) view.findViewById(R.id.article);
             TextView count = (TextView) view.findViewById(R.id.count);
             TextView sum = (TextView) view.findViewById(R.id.sum);
+            TextView category = (TextView) view.findViewById(R.id.category);
             final ContentValues entry = getItem(position);
             article.setText(entry.getAsString(DAO.ItemEntry.COLUMN_NAME_ARTICLE));
             sum.setText(entry.getAsString(DAO.ItemEntry.COLUMN_NAME_SUM));
             count.setText(entry.getAsString(DAO.ItemEntry.COLUMN_NAME_COUNT));
+            category.setText(entry.getAsString(DAO.ItemEntry.COLUMN_NAME_CATEGORY));
 
-            view.setOnLongClickListener(new View.OnLongClickListener() {
+            view.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public boolean onLongClick(View v) {
+                public void onClick(View v) {
                     final Dialog dialog = new Dialog(getContext());
                     dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
                     dialog.setContentView(R.layout.edit_item);
@@ -237,6 +238,18 @@ public class DailyExpenseList extends AppCompatActivity {
 
                     final EditText sum = (EditText) dialog.findViewById(R.id.sum);
                     sum.setText(entry.getAsString(DAO.ItemEntry.COLUMN_NAME_SUM));
+
+                    final Spinner spinner = (Spinner) dialog.findViewById(R.id.spinner);
+                    String category = entry.getAsString(DAO.ItemEntry.COLUMN_NAME_CATEGORY);
+                    if (category != null) {
+                        SpinnerAdapter adapter = spinner.getAdapter();
+                        for (int i = 0; i < adapter.getCount(); i++) {
+                            if (((String) adapter.getItem(i)).matches(category)) {
+                                spinner.setSelection(i);
+                                break;
+                            }
+                        }
+                    }
 
                     Button ok = (Button) dialog.findViewById(R.id.ok);
                     ok.setOnClickListener(new View.OnClickListener() {
@@ -263,6 +276,7 @@ public class DailyExpenseList extends AppCompatActivity {
                             entry.put(DAO.ItemEntry.COLUMN_NAME_ARTICLE, String.valueOf(article.getText()));
                             entry.put(DAO.ItemEntry.COLUMN_NAME_SUM, String.valueOf(sum.getText()));
                             entry.put(DAO.ItemEntry.COLUMN_NAME_COUNT, String.valueOf(count.getText()));
+                            entry.put(DAO.ItemEntry.COLUMN_NAME_CATEGORY, (String) spinner.getSelectedItem());
 
                             if (draftModus == false) {
                                 DaoUtils.updateExpenseItem(id, entry);
@@ -282,8 +296,6 @@ public class DailyExpenseList extends AppCompatActivity {
                     });
 
                     dialog.show();
-
-                    return true;
                 }
             });
 
@@ -309,7 +321,6 @@ public class DailyExpenseList extends AppCompatActivity {
                     arr.put(itemObj);
                 }
                 resObj.put("items", arr);
-                //resObj.put("isChanged", updated);
 
                 HttpClientBuilder builder= HttpClientBuilder.create();
                 HttpClient httpClient = builder.build();
@@ -349,9 +360,11 @@ public class DailyExpenseList extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         //super.onBackPressed();
-        Intent backIntent = new Intent();
-        backIntent.putExtra("updated", updated);
-        setResult(RESULT_OK, backIntent);
+        Intent intent = new Intent(DailyExpenseList.this, ExpenseMainActivity.class);
+        intent.putExtra("updated", true);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        startActivity(intent);
         finish();
+
     }
 }
