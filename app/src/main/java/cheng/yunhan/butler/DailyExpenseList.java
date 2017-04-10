@@ -324,7 +324,7 @@ public class DailyExpenseList extends AppCompatActivity {
 
                 HttpClientBuilder builder= HttpClientBuilder.create();
                 HttpClient httpClient = builder.build();
-                HttpPost httppost = new HttpPost("http://47.92.27.34:8080/ocr_processor/processed/");
+                HttpPost httppost = new HttpPost(Utils.POST_PROCESSED_URL);
 
                 MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
                 multipartEntityBuilder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
@@ -359,12 +359,11 @@ public class DailyExpenseList extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        //super.onBackPressed();
+        super.onBackPressed();
         Intent intent = new Intent(DailyExpenseList.this, ExpenseMainActivity.class);
         intent.putExtra("updated", true);
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         startActivity(intent);
         finish();
-
     }
 }
