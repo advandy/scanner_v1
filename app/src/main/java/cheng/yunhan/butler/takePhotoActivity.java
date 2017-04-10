@@ -3,6 +3,7 @@ package cheng.yunhan.butler;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
@@ -13,19 +14,30 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.RequiresApi;
 import android.support.v4.content.FileProvider;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import cheng.yunhan.butler.customview.CameraPreview;
+
+import static android.content.ContentValues.TAG;
+import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE;
 
 public class takePhotoActivity extends Activity {
 
     public static final int REQUEST_IMAGE_CAPTURE = 1;
     File imageFile;
     String shopName;
-    private Camera camera;
+    private Camera mCamera;
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,9 +46,40 @@ public class takePhotoActivity extends Activity {
         Intent intent = getIntent();
         shopName = intent.getStringExtra("shopName");
 
-        //setContentView(new CameraPreview(this));
+        setContentView(R.layout.camera_preview);
 
-        takePhoto();
+        // Create an instance of Camera
+        mCamera = getCameraInstance();
+
+        // Create our Preview view and set it as the content of our activity.
+        CameraPreview mPreview = new CameraPreview(this, mCamera);
+        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+        preview.addView(mPreview);
+
+        Button captureButton = (Button) findViewById(R.id.button_capture);
+        captureButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        // get an image from the camera
+                        mCamera.takePicture(null, null, mPicture);
+                    }
+                }
+        );
+
+        //takePhoto();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mCamera != null) {
+            mCamera.stopPreview();
+            mCamera.setPreviewCallback(null);
+
+            mCamera.release();
+            mCamera = null;
+        }
     }
 
     private void backToTimeline() {
@@ -45,6 +88,57 @@ public class takePhotoActivity extends Activity {
         finish();
     }
 
+    public static Camera getCameraInstance(){
+        Camera c = null;
+        try {
+            c = Camera.open(); // attempt to get a Camera instance
+            c.setDisplayOrientation(90);
+            Camera.Parameters p = c.getParameters();
+            p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+            p.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+            p.setRotation(90);
+            c.setParameters(p);
+        }
+        catch (Exception e){
+            // Camera is not available (in use or does not exist)
+        }
+        return c; // returns null if camera is unavailable
+    }
+
+    private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
+
+        @Override
+        public void onPictureTaken(byte[] data, Camera camera) {
+
+            File pictureFile = null;
+            try {
+                pictureFile = createImageFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (pictureFile == null){
+                return;
+            }
+
+            try {
+                FileOutputStream fos = new FileOutputStream(pictureFile);
+                fos.write(data);
+                fos.close();
+
+                imageFile = pictureFile;
+                Intent intent = new Intent(takePhotoActivity.this, CropImageActivity.class);
+                intent.putExtra("imageUri", Uri.fromFile(imageFile).getPath());
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.putExtra("shopName", shopName);
+                startActivity(intent);
+                finish();
+            } catch (FileNotFoundException e) {
+                Log.d(TAG, "File not found: " + e.getMessage());
+            } catch (IOException e) {
+                Log.d(TAG, "Error accessing file: " + e.getMessage());
+            }
+        }
+    };
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -55,7 +149,7 @@ public class takePhotoActivity extends Activity {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             intent.putExtra("shopName", shopName);
             startActivity(intent);
-            this.finish();
+            finish();
         } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_CANCELED) {
             imageFile.delete();
             backToTimeline();
@@ -82,18 +176,14 @@ public class takePhotoActivity extends Activity {
         File file = null;
 
         try {
-            CameraManager cameraManager = (CameraManager) getApplicationContext().getSystemService(Context.CAMERA_SERVICE);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                for (String id : cameraManager.getCameraIdList()) {
-
-                    // Turn on the flash if camera has one
-                    if (cameraManager.getCameraCharacteristics(id).get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
-
-                        cameraManager.setTorchMode(id, true);
-
-                    }
-                }
+            boolean hasFlash = this.getPackageManager()
+                    .hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
+            if (hasFlash) {
+                Camera cam = Camera.open();
+                Camera.Parameters p = cam.getParameters();
+                p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+                cam.setParameters(p);
+                cam.startPreview();
             }
 
         } catch (Exception e2) {

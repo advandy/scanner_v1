@@ -47,7 +47,7 @@ public class CropImageActivity extends AppCompatActivity {
         imagePath = intent.getStringExtra("imageUri");
         shopName = intent.getStringExtra("shopName");
 
-        image = BitmapFactory.decodeFile(imagePath);
+        image = Utils.decodeSampledBitmapFromFile(imagePath, 1000, 1000);
 
         originWidth = image.getWidth();
         originHeight = image.getHeight();
@@ -140,7 +140,7 @@ public class CropImageActivity extends AppCompatActivity {
                 try {
                     File image = new File(imagePath);
                     OutputStream outStream = new FileOutputStream(image);
-                    resultingImage.compress(Bitmap.CompressFormat.JPEG, 20, outStream);
+                    resultingImage.compress(Bitmap.CompressFormat.JPEG, 80, outStream);
                     outStream.flush();
                     outStream.close();
                     pb.setVisibility(View.INVISIBLE);
