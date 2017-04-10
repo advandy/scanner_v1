@@ -7,13 +7,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.Layout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,8 +24,6 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import java.io.File;
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -37,10 +33,8 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-
 
 import static android.app.Activity.RESULT_OK;
 
@@ -224,7 +218,7 @@ public class ExpenseTimelineFragment extends Fragment {
                         intent.putExtra("month", month);
                         intent.putExtra("shop", shop);
                         startActivity(intent);
-                        new QueryMonthlyRecords().execute("Book");
+                        mainActivity.finish();
                     }
                 });
 
@@ -289,6 +283,7 @@ public class ExpenseTimelineFragment extends Fragment {
                             Intent intent = new Intent(getContext(), takePhotoActivity.class);
                             intent.putExtra("shopName", shopName);
                             startActivity(intent);
+                            mainActivity.finish();
                         }
                     });
                     tutorialDialog.show();
@@ -296,6 +291,7 @@ public class ExpenseTimelineFragment extends Fragment {
                     Intent intent = new Intent(getContext(), takePhotoActivity.class);
                     intent.putExtra("shopName", shopName);
                     startActivity(intent);
+                    mainActivity.finish();
                 }
             }
         });
@@ -642,7 +638,8 @@ public class ExpenseTimelineFragment extends Fragment {
                         intent.putExtra("day", day);
                         intent.putExtra("month", month);
                         intent.putExtra("shop", shop);
-                        startActivityForResult(intent, DISPLAY_DAILY_EXPENSE);
+                        startActivity(intent);
+                        mainActivity.finish();
 
                     }
                 });

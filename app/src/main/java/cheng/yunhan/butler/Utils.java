@@ -21,6 +21,9 @@ public class Utils {
         return false;
     }
 
+    public static String POST_PIC_URL = "http://46.101.168.87:8080/ocr_processor/proxy/";
+    public static String POST_PROCESSED_URL = "http://46.101.168.87:8080/ocr_processor/processed/";
+
     public static HashMap<String, Integer> getIcons(){
         return new HashMap<String, Integer>(){
             {
