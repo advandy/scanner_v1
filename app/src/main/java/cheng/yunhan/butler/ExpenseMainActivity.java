@@ -1,42 +1,16 @@
 package cheng.yunhan.butler;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.Path;
-import android.graphics.Point;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
-import android.os.Environment;
-import android.support.v7.app.AppCompatActivity;
-
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.os.Bundle;
-
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.ImageView;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-import cheng.yunhan.butler.customview.BottomImageView;
-import cheng.yunhan.butler.customview.ChooseArea;
 
 
-public class ExpenseMainActivity extends AppCompatActivity implements ExpenseTimelineFragment.OnFragmentInteractionListener, ExpenseBooksFragment.OnBookChosenListener {
+public class ExpenseMainActivity extends AppCompatActivity implements ExpenseTimelineFragment.OnFragmentInteractionListener, ExpenseBooksFragment.OnBookChosenListener{
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
