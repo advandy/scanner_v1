@@ -32,6 +32,13 @@ public class Utils {
                 put("Aldi", R.drawable.aldi);
                 put("Lidl", R.drawable.lidl);
                 put("Dm", R.drawable.dm);
+                put("Rossman", R.drawable.rossmann);
+                put("Kaufland", R.drawable.kaufland);
+                put("GaleriaKaufhof", R.drawable.galeriakaufhof);
+                put("Mueller", R.drawable.muller);
+                put("Douglas", R.drawable.douglas);
+                put("Netto", R.drawable.netto);
+                put("Real", R.drawable.real);
             }
         };
     };
