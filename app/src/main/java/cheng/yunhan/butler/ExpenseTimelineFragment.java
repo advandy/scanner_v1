@@ -283,7 +283,7 @@ public class ExpenseTimelineFragment extends Fragment {
                             Intent intent = new Intent(getContext(), takePhotoActivity.class);
                             intent.putExtra("shopName", shopName);
                             startActivity(intent);
-                            mainActivity.finish();
+                            //mainActivity.finish();
                         }
                     });
                     tutorialDialog.show();
@@ -291,7 +291,7 @@ public class ExpenseTimelineFragment extends Fragment {
                     Intent intent = new Intent(getContext(), takePhotoActivity.class);
                     intent.putExtra("shopName", shopName);
                     startActivity(intent);
-                    mainActivity.finish();
+                    //mainActivity.finish();
                 }
             }
         });

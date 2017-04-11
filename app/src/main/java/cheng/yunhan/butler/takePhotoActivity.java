@@ -1,18 +1,14 @@
 package cheng.yunhan.butler;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.annotation.RequiresApi;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.View;
@@ -30,15 +26,14 @@ import java.util.Date;
 import cheng.yunhan.butler.customview.CameraPreview;
 
 import static android.content.ContentValues.TAG;
-import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE;
 
+@SuppressWarnings("ALL")
 public class takePhotoActivity extends Activity {
 
     public static final int REQUEST_IMAGE_CAPTURE = 1;
     File imageFile;
     String shopName;
     private Camera mCamera;
-    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,6 +61,12 @@ public class takePhotoActivity extends Activity {
                     }
                 }
         );
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            // your code using Camera API here - is between 1-20
+        } else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            // your code using Camera2 API here - is api 21 or higher
+        }
 
         //takePhoto();
     }
@@ -171,7 +172,6 @@ public class takePhotoActivity extends Activity {
         // Save a file: path for use with ACTION_VIEW intents
         return image;
     }
-    @RequiresApi(api = Build.VERSION_CODES.M)
     private void takePhoto() {
         File file = null;
 
