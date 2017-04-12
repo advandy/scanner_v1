@@ -39,6 +39,7 @@ public class takePhotoActivity extends Activity {
     File imageFile;
     String shopName;
     private Camera mCamera;
+    private CameraPreview mPreview;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,7 +59,7 @@ public class takePhotoActivity extends Activity {
 
         if (mCamera != null) {
             // Create our Preview view and set it as the content of our activity.
-            CameraPreview mPreview = new CameraPreview(this, mCamera);
+            mPreview = new CameraPreview(this, mCamera);
             FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
             preview.addView(mPreview);
 
@@ -111,13 +112,7 @@ public class takePhotoActivity extends Activity {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 50);
             } else {
                 c = Camera.open(Camera.CameraInfo.CAMERA_FACING_BACK);
-                // attempt to get a Camera instance
-                c.setDisplayOrientation(90);
-                Camera.Parameters p = c.getParameters();
-                p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-                p.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-                p.setRotation(90);
-                c.setParameters(p);
+
             }
         }
         catch (Exception e){

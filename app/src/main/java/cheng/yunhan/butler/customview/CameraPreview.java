@@ -7,6 +7,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Created by rabbitsong on 10/04/17.
@@ -54,6 +55,23 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         // stop preview before making changes
         try {
             mCamera.stopPreview();
+
+            mCamera.setDisplayOrientation(90);
+            Camera.Parameters p = mCamera.getParameters();
+            List<Camera.Size> sizes = p.getSupportedPictureSizes();
+            Camera.Size size = sizes.get(0);
+            for (int i = 0; i < sizes.size(); i++) {
+                if (sizes.get(i).width > size.width)
+                    size = sizes.get(i);
+            }
+            Log.d("camera size", "width: " + size.width +" height: "+ size.height);
+            p.setPictureSize(size.width, size.height);
+
+            //p.setPictureSize(1000, 1200);
+            p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+            p.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+            p.setRotation(90);
+            mCamera.setParameters(p);
         } catch (Exception e){
             // ignore: tried to stop a non-existent preview
         }
