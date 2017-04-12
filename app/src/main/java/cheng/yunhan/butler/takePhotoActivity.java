@@ -1,5 +1,6 @@
 package cheng.yunhan.butler;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -9,7 +10,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
+import android.support.v4.content.PermissionChecker;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -43,32 +48,31 @@ public class takePhotoActivity extends Activity {
 
         setContentView(R.layout.camera_preview);
 
-        // Create an instance of Camera
-        mCamera = getCameraInstance();
-
-        // Create our Preview view and set it as the content of our activity.
-        CameraPreview mPreview = new CameraPreview(this, mCamera);
-        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
-        preview.addView(mPreview);
-
-        Button captureButton = (Button) findViewById(R.id.button_capture);
-        captureButton.setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        // get an image from the camera
-                        mCamera.takePicture(null, null, mPicture);
-                    }
-                }
-        );
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            // your code using Camera API here - is between 1-20
-        } else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            // your code using Camera2 API here - is api 21 or higher
-        }
+        lauchCamera();
 
         //takePhoto();
+    }
+
+    private void lauchCamera() {
+        mCamera = getCameraInstance();
+
+        if (mCamera != null) {
+            // Create our Preview view and set it as the content of our activity.
+            CameraPreview mPreview = new CameraPreview(this, mCamera);
+            FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+            preview.addView(mPreview);
+
+            Button captureButton = (Button) findViewById(R.id.button_capture);
+            captureButton.setOnClickListener(
+                    new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            // get an image from the camera
+                            mCamera.takePicture(null, null, mPicture);
+                        }
+                    }
+            );
+        }
     }
 
     @Override
@@ -89,18 +93,35 @@ public class takePhotoActivity extends Activity {
         finish();
     }
 
-    public static Camera getCameraInstance(){
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (grantResults[0] == PermissionChecker.PERMISSION_GRANTED) {
+            lauchCamera();
+        } else {
+            onBackPressed();
+        }
+    }
+
+    public Camera getCameraInstance(){
         Camera c = null;
         try {
-            c = Camera.open(); // attempt to get a Camera instance
-            c.setDisplayOrientation(90);
-            Camera.Parameters p = c.getParameters();
-            p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-            p.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-            p.setRotation(90);
-            c.setParameters(p);
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                //ask for authorisation
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 50);
+            } else {
+                c = Camera.open(Camera.CameraInfo.CAMERA_FACING_BACK);
+                // attempt to get a Camera instance
+                c.setDisplayOrientation(90);
+                Camera.Parameters p = c.getParameters();
+                p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+                p.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+                p.setRotation(90);
+                c.setParameters(p);
+            }
         }
         catch (Exception e){
+            Log.e("", String.valueOf(e));
             // Camera is not available (in use or does not exist)
         }
         return c; // returns null if camera is unavailable
